@@ -1,13 +1,13 @@
-package br.com.fiap.carehub_agendamento;
+package br.com.fiap.carehub.historico;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CarehubAgendamentoApplication {
+public class CarehubHistoricoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CarehubAgendamentoApplication.class, args);
+		SpringApplication.run(CarehubHistoricoApplication.class, args);
 	}
 
 }

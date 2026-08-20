@@ -1,5 +1,27 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: carehub-agendamento
-server:
-  port: 8081
+
+  # Configuração do Banco de Dados H2
+  datasource:
+    url: jdbc:h2:mem:carehubdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # Habilita o painel gráfico em http://localhost:8081/h2-console
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+  # Configuração do Flyway para criar a estrutura automaticamente
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration

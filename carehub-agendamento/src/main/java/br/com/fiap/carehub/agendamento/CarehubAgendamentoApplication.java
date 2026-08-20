@@ -1,13 +1,13 @@
-package br.com.fiap.carehub_notificacao;
+package br.com.fiap.carehub.agendamento;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CarehubNotificacaoApplication {
+public class CarehubAgendamentoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CarehubNotificacaoApplication.class, args);
+		SpringApplication.run(CarehubAgendamentoApplication.class, args);
 	}
 
 }
