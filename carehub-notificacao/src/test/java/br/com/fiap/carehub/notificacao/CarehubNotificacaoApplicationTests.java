@@ -1,10 +1,10 @@
-package br.com.fiap.carehub.carehub_historico;
+package br.com.fiap.carehub.notificacao;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CarehubHistoricoApplicationTests {
+class CarehubNotificacaoApplicationTests {
 
 	@Test
 	void contextLoads() {
