@@ -1,0 +1,20 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: carehub-rabbitmq
+    ports:
+      - "5672:5672"   # Porta do AMQP
+      - "15672:15672" # Dashboard do RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  postgres:
+    image: postgres:15
+    container_name: carehub-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: carehub_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres

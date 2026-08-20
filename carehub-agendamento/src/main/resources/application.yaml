@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: carehub-agendamento
+server:
+  port: 8081

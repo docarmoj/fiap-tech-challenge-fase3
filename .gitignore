@@ -1,0 +1,19 @@
+# Maven target directories
+**/target/
+**/*.jar
+**/*.war
+
+# IDE files
+**/.idea/
+**/*.iml
+**/.vscode/
+**/.settings/
+**/.classpath
+**/.project/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
