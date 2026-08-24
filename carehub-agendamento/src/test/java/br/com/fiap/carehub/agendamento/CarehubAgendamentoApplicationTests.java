@@ -1,4 +1,4 @@
-package br.com.fiap.carehub_agendamento;
+package br.com.fiap.carehub.agendamento;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
