@@ -79,4 +79,12 @@ public class ConsultaControllerTest {
                 .andExpect(jsonPath("$.status").value("REALIZADA"))
                 .andExpect(jsonPath("$.observacoes").value("Consulta atualizada pelo teste"));
     }
+
+    @Test
+    @WithMockUser
+    void deveRetornarNotFoundQuandoConsultaNaoExistir() throws Exception {
+
+        mockMvc.perform(get("/consultas/999"))
+                .andExpect(status().isNotFound());
+    }
 }
