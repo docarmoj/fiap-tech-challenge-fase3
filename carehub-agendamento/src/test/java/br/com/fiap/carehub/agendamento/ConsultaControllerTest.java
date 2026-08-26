@@ -1,14 +1,18 @@
 package br.com.fiap.carehub.agendamento;
 
+import br.com.fiap.carehub.agendamento.enums.Role;
+import br.com.fiap.carehub.agendamento.model.Usuario;
+import br.com.fiap.carehub.agendamento.security.UsuarioAutenticado;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -17,21 +21,32 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public class ConsultaControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    private UsuarioAutenticado medicoAutenticado() {
+        Usuario usuario = Usuario.builder()
+                .username("medico.teste")
+                .password("123456")
+                .role(Role.MEDICO)
+                .ativo(true)
+                .build();
+
+        return new UsuarioAutenticado(usuario);
+    }
+
     @Test
-    @WithMockUser
     void deveBuscarConsultaPorId() throws Exception {
 
-        mockMvc.perform(get("/consultas/1"))
+        mockMvc.perform(get("/consultas/1")
+                        .with(user(medicoAutenticado())))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser
     void deveCriarConsulta() throws Exception {
 
         String requestBody = """
@@ -44,6 +59,7 @@ public class ConsultaControllerTest {
                 """;
 
         mockMvc.perform(post("/consultas")
+                        .with(user(medicoAutenticado()))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
@@ -55,7 +71,6 @@ public class ConsultaControllerTest {
     }
 
     @Test
-    @WithMockUser
     void deveAtualizarConsulta() throws Exception {
 
         String requestBody = """
@@ -69,6 +84,7 @@ public class ConsultaControllerTest {
                 """;
 
         mockMvc.perform(put("/consultas/1")
+                        .with(user(medicoAutenticado()))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
@@ -81,10 +97,10 @@ public class ConsultaControllerTest {
     }
 
     @Test
-    @WithMockUser
     void deveRetornarNotFoundQuandoConsultaNaoExistir() throws Exception {
 
-        mockMvc.perform(get("/consultas/999"))
+        mockMvc.perform(get("/consultas/999")
+                        .with(user(medicoAutenticado())))
                 .andExpect(status().isNotFound());
     }
 }

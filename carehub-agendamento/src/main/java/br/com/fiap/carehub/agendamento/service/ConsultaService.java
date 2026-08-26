@@ -83,7 +83,9 @@ public class ConsultaService {
         consulta.setStatus(request.getStatus());
         consulta.setObservacoes(request.getObservacoes());
 
-        return consultaRepository.save(consulta);
+        Consulta consultaAtualizada = consultaRepository.save(consulta);
+
+        return buscarPorId(consultaAtualizada.getId());
     }
 
 }
