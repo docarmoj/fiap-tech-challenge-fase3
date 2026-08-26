@@ -1,16 +1,18 @@
 package br.com.fiap.carehub.agendamento.service;
 
+import br.com.fiap.carehub.agendamento.dto.ConsultaEvent;
+import br.com.fiap.carehub.agendamento.dto.ConsultaRequest;
+import br.com.fiap.carehub.agendamento.dto.ConsultaUpdateRequest;
+import br.com.fiap.carehub.agendamento.messaging.ConsultaEventPublisher;
 import br.com.fiap.carehub.agendamento.model.Consulta;
+import br.com.fiap.carehub.agendamento.model.Paciente;
+import br.com.fiap.carehub.agendamento.model.Profissional;
 import br.com.fiap.carehub.agendamento.repository.ConsultaRepository;
 import br.com.fiap.carehub.agendamento.repository.PacienteRepository;
 import br.com.fiap.carehub.agendamento.repository.ProfissionalRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import br.com.fiap.carehub.agendamento.dto.ConsultaRequest;
-import br.com.fiap.carehub.agendamento.model.Paciente;
-import br.com.fiap.carehub.agendamento.model.Profissional;
-import br.com.fiap.carehub.agendamento.dto.ConsultaUpdateRequest;
 
 @Service
 public class ConsultaService {
@@ -18,15 +20,18 @@ public class ConsultaService {
     private final ConsultaRepository consultaRepository;
     private final PacienteRepository pacienteRepository;
     private final ProfissionalRepository profissionalRepository;
+    private final ConsultaEventPublisher consultaEventPublisher;
 
     public ConsultaService(
             ConsultaRepository consultaRepository,
             PacienteRepository pacienteRepository,
-            ProfissionalRepository profissionalRepository
+            ProfissionalRepository profissionalRepository,
+            ConsultaEventPublisher consultaEventPublisher
     ) {
         this.consultaRepository = consultaRepository;
         this.pacienteRepository = pacienteRepository;
         this.profissionalRepository = profissionalRepository;
+        this.consultaEventPublisher = consultaEventPublisher;
     }
 
     public Consulta buscarPorId(Long id) {
@@ -58,7 +63,11 @@ public class ConsultaService {
                 .observacoes(request.getObservacoes())
                 .build();
 
-        return consultaRepository.save(consulta);
+        Consulta consultaCriada = consultaRepository.save(consulta);
+
+        publicarEvento(consultaCriada, "CONSULTA_CRIADA");
+
+        return consultaCriada;
     }
 
     public Consulta atualizarConsulta(Long id, ConsultaUpdateRequest request) {
@@ -85,7 +94,26 @@ public class ConsultaService {
 
         Consulta consultaAtualizada = consultaRepository.save(consulta);
 
-        return buscarPorId(consultaAtualizada.getId());
+        Consulta consultaCarregada = buscarPorId(consultaAtualizada.getId());
+
+        publicarEvento(consultaCarregada, "CONSULTA_ALTERADA");
+
+        return consultaCarregada;
     }
 
+    private void publicarEvento(Consulta consulta, String acao) {
+
+        Paciente paciente = consulta.getPaciente();
+
+        ConsultaEvent event = new ConsultaEvent(
+                consulta.getId(),
+                paciente.getId(),
+                paciente.getNome(),
+                paciente.getEmail(),
+                consulta.getDataHora(),
+                acao
+        );
+
+        consultaEventPublisher.publicar(event);
+    }
 }
