@@ -7,8 +7,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class NotificacaoListener {
 
-	@RabbitListener(queues = "carehub.notificacoes.queue")
+	@RabbitListener(queues = "${carehub.rabbitmq.queue}")
 	public void receberLembrete(ConsultaEvent event) {
+		/*Implementar lógica de envio de notificação */
 		System.out.println("--------------------------------------------------");
 		System.out.println("[NOTIFICAÇÃO] Lembrete para: " + event.nomePaciente());
 		System.out.println("E-mail: " + event.emailPaciente());
