@@ -1,5 +1,30 @@
 spring:
   application:
     name: carehub-notificacao
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        missing-queues-fatal: false
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1s
+          max-interval: 10s
+          multiplier: 2.0
+          max-retries: 3
+
 server:
   port: 8083
+
+carehub:
+  rabbitmq:
+    exchange: carehub.consultas.exchange
+    routing-key: consulta.notificacao
+    queue: carehub.notificacoes.queue
+    dlx: carehub.consultas.dlx
+    dlq: carehub.notificacoes.dlq
+    dlq-routing-key: consulta.notificacao.dlq

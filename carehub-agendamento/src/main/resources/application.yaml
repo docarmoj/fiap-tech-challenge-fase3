@@ -7,6 +7,12 @@ spring:
   application:
     name: carehub-agendamento
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
   datasource:
     url: jdbc:postgresql://localhost:5432/carehub_db
     driver-class-name: org.postgresql.Driver
@@ -22,3 +28,12 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+carehub:
+  rabbitmq:
+    exchange: carehub.consultas.exchange
+    routing-key: consulta.notificacao
+    queue: carehub.notificacoes.queue
+    dlx: carehub.consultas.dlx
+    dlq: carehub.notificacoes.dlq
+    dlq-routing-key: consulta.notificacao.dlq

@@ -10,7 +10,7 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
 
   postgres:
-    image: postgres:15
+    image: postgres:16
     container_name: carehub-postgres
     ports:
       - "5432:5432"
