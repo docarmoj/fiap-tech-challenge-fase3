@@ -1,20 +1,32 @@
 package br.com.fiap.carehub.notificacao.listener;
 
 import br.com.fiap.carehub.notificacao.dto.ConsultaEvent;
+import br.com.fiap.carehub.notificacao.dto.LembreteNotificacao;
+import br.com.fiap.carehub.notificacao.sender.NotificacaoSender;
+import br.com.fiap.carehub.notificacao.service.NotificacaoService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NotificacaoListener {
 
+	private final NotificacaoService notificacaoService;
+	private final NotificacaoSender notificacaoSender;
+
+	public NotificacaoListener(
+			NotificacaoService notificacaoService,
+			NotificacaoSender notificacaoSender
+	) {
+		this.notificacaoService = notificacaoService;
+		this.notificacaoSender = notificacaoSender;
+	}
+
 	@RabbitListener(queues = "${carehub.rabbitmq.queue}")
 	public void receberLembrete(ConsultaEvent event) {
-		/*Implementar lógica de envio de notificação */
-		System.out.println("--------------------------------------------------");
-		System.out.println("[NOTIFICAÇÃO] Lembrete para: " + event.nomePaciente());
-		System.out.println("E-mail: " + event.emailPaciente());
-		System.out.println("Consulta #" + event.consultaId() + " (" + event.acao() + ")");
-		System.out.println("Data: " + event.dataHora());
-		System.out.println("--------------------------------------------------");
+
+		LembreteNotificacao lembrete =
+				notificacaoService.gerarLembrete(event);
+
+		notificacaoSender.enviar(lembrete);
 	}
 }
