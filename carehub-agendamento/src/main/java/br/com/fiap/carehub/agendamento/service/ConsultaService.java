@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class ConsultaService {
 
@@ -32,6 +34,14 @@ public class ConsultaService {
         this.pacienteRepository = pacienteRepository;
         this.profissionalRepository = profissionalRepository;
         this.consultaEventPublisher = consultaEventPublisher;
+    }
+
+    public List<Consulta> listarTodas() {
+        return consultaRepository.findAll();
+    }
+
+    public List<Consulta> listarPorPaciente(Long pacienteId) {
+        return consultaRepository.findByPacienteId(pacienteId);
     }
 
     public Consulta buscarPorId(Long id) {
