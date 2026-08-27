@@ -1,0 +1,563 @@
+{
+  "info": {
+    "name": "CareHub - Tech Challenge Fase 3",
+    "description": "Endpoints do carehub-agendamento (porta 8081).\n\nAntes de rodar:\n1. docker compose up -d\n2. cd carehub-agendamento && ./mvnw spring-boot:run\n\nSenha de todos os usuarios: 123456\nUsuarios: medico1, enfermeiro1, paciente1, paciente2, inativo1\n\nA pasta 'Matriz de autorizacao' pode ser rodada inteira pelo Collection Runner: cada request valida o proprio status esperado.\n\nO carehub-historico (8082) ainda nao expoe endpoints - o GraphQL e a DEV TASK 07.\nO carehub-notificacao (8083) so consome fila, nao tem endpoint HTTP.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "senha", "value": "123456" },
+    { "key": "consultaPaciente1", "value": "1" },
+    { "key": "consultaPaciente2", "value": "3" }
+  ],
+  "item": [
+    {
+      "name": "Autenticacao",
+      "item": [
+        {
+          "name": "Sem credenciais - espera 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sem credenciais', () => pm.response.to.have.status(401));",
+                  "pm.test('desafia com WWW-Authenticate', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.include('Basic'));",
+                  "pm.test('corpo em ProblemDetail', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Senha errada - espera 401",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "senha-errada" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 com senha errada', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario inativo - espera 401",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "inativo1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 para credencial desativada', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - medico1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('perfil MEDICO', () => pm.expect(b.role).to.eql('MEDICO'));",
+                  "pm.test('vinculado a um profissional', () => pm.expect(b.profissionalId).to.not.be.undefined);",
+                  "pm.test('sem vinculo de paciente', () => pm.expect(b.pacienteId).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - enfermeiro1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "enfermeiro1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('perfil ENFERMEIRO', () => pm.expect(pm.response.json().role).to.eql('ENFERMEIRO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - paciente1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('perfil PACIENTE', () => pm.expect(b.role).to.eql('PACIENTE'));",
+                  "pm.test('vinculado a um paciente', () => pm.expect(b.pacienteId).to.not.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - paciente2",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente2" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Matriz de autorizacao",
+      "item": [
+        {
+          "name": "MEDICO lista todas as consultas",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(c => c.pacienteId);",
+                  "pm.test('enxerga mais de um paciente', () => pm.expect(new Set(ids).size).to.be.above(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO busca consulta de outro paciente",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('200 - medico acessa qualquer consulta', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO cria consulta",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"profissionalId\": 1,\n  \"dataHora\": \"2030-12-01T09:00:00\",\n  \"observacoes\": \"Consulta criada pelo Postman\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('nasce AGENDADA', () => pm.expect(pm.response.json().status).to.eql('AGENDADA'));",
+                  "pm.collectionVariables.set('consultaCriada', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO atualiza a consulta criada",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"profissionalId\": 1,\n  \"dataHora\": \"2030-12-02T14:00:00\",\n  \"status\": \"REALIZADA\",\n  \"observacoes\": \"Atualizada pelo Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaCriada}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaCriada}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('status alterado', () => pm.expect(pm.response.json().status).to.eql('REALIZADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ENFERMEIRO lista todas as consultas",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "enfermeiro1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(c => c.pacienteId);",
+                  "pm.test('enxerga mais de um paciente', () => pm.expect(new Set(ids).size).to.be.above(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ENFERMEIRO registra consulta",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "enfermeiro1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 2,\n  \"profissionalId\": 2,\n  \"dataHora\": \"2030-12-05T11:00:00\",\n  \"observacoes\": \"Triagem registrada pelo Postman\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('201 - enfermeiro registra consulta', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE lista somente as proprias",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente2" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const corpo = pm.response.json();",
+                  "pm.test('retornou alguma consulta', () => pm.expect(corpo.length).to.be.above(0));",
+                  "pm.test('todas sao do proprio paciente', () => corpo.forEach(c => pm.expect(c.pacienteId).to.eql(2)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE busca consulta propria",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente2" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('e a consulta dele', () => pm.expect(pm.response.json().pacienteId).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE busca consulta de outro - espera 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));",
+                  "pm.test('corpo em ProblemDetail', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "pm.test('traz title e status', () => { const b = pm.response.json(); pm.expect(b.title).to.be.a('string'); pm.expect(b.status).to.eql(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE tenta criar consulta - espera 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"profissionalId\": 1,\n  \"dataHora\": \"2030-12-10T09:00:00\",\n  \"observacoes\": \"Paciente nao pode agendar\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 - registrar consulta e do profissional', () => pm.response.to.have.status(403));",
+                  "pm.test('mesmo formato de erro', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE tenta atualizar consulta - espera 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "paciente1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"profissionalId\": 1,\n  \"dataHora\": \"2030-12-11T09:00:00\",\n  \"status\": \"CANCELADA\",\n  \"observacoes\": \"Paciente nao pode alterar\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('403 - alterar consulta e do profissional', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consulta inexistente - espera 404",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "medico1" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas/9999", "host": ["{{baseUrl}}"], "path": ["consultas", "9999"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('404 - nao existe e diferente de nao pode', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
