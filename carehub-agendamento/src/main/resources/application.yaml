@@ -36,4 +36,4 @@ carehub:
     queue: carehub.notificacoes.queue
     dlx: carehub.consultas.dlx
     dlq: carehub.notificacoes.dlq
-    dlq-routing-key: consulta.evento.dlq
+    dlq-routing-key: consulta.notificacao.dlq

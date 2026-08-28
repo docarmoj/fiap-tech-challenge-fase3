@@ -46,4 +46,4 @@ carehub:
     queue: carehub.historico.queue
     dlx: carehub.consultas.dlx
     dlq: carehub.historico.dlq
-    dlq-routing-key: consulta.evento.historico.dlq
+    dlq-routing-key: consulta.historico.dlq
