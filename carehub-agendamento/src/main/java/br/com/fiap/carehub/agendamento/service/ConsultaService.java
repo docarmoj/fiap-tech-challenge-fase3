@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -114,14 +115,20 @@ public class ConsultaService {
     private void publicarEvento(Consulta consulta, String acao) {
 
         Paciente paciente = consulta.getPaciente();
+        Profissional profissional = consulta.getProfissional();
 
         ConsultaEvent event = new ConsultaEvent(
                 consulta.getId(),
                 paciente.getId(),
                 paciente.getNome(),
                 paciente.getEmail(),
+                profissional.getId(),
+                profissional.getNome(),
                 consulta.getDataHora(),
-                acao
+                consulta.getStatus().name(),
+                consulta.getObservacoes(),
+                acao,
+                LocalDateTime.now()
         );
 
         consultaEventPublisher.publicar(event);

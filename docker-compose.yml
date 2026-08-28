@@ -18,3 +18,6 @@ services:
       POSTGRES_DB: carehub_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    volumes:
+      # Cria o database do carehub-historico na primeira subida do container
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
