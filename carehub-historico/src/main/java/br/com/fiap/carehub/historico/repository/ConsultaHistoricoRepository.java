@@ -1,5 +1,6 @@
 package br.com.fiap.carehub.historico.repository;
 
+import br.com.fiap.carehub.historico.enums.StatusConsulta;
 import br.com.fiap.carehub.historico.model.ConsultaHistorico;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +15,12 @@ public interface ConsultaHistoricoRepository extends JpaRepository<ConsultaHisto
 
     List<ConsultaHistorico> findByPacienteIdOrderByDataHoraDesc(Long pacienteId);
 
+    List<ConsultaHistorico> findByPacienteIdAndStatusOrderByDataHoraDesc(
+            Long pacienteId, StatusConsulta status);
+
     List<ConsultaHistorico> findByPacienteIdAndDataHoraAfterOrderByDataHoraAsc(
             Long pacienteId, LocalDateTime dataHora);
+
+    List<ConsultaHistorico> findByPacienteIdAndDataHoraAfterAndStatusOrderByDataHoraAsc(
+            Long pacienteId, LocalDateTime dataHora, StatusConsulta status);
 }

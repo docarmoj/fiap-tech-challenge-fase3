@@ -1,0 +1,35 @@
+"Data e hora local no formato ISO-8601, sem fuso. Exemplo: 2030-09-15T10:00:00"
+scalar DateTime
+
+enum StatusConsulta {
+  AGENDADA
+  REALIZADA
+  CANCELADA
+}
+
+type Consulta {
+  id: ID!
+  dataHora: DateTime!
+  status: StatusConsulta!
+  observacoes: String
+  paciente: Paciente!
+  profissional: Profissional!
+}
+
+type Paciente {
+  id: ID!
+  nome: String!
+}
+
+type Profissional {
+  id: ID!
+  nome: String!
+}
+
+type Query {
+  "Todos os atendimentos de um paciente, do mais recente para o mais antigo."
+  historicoPorPaciente(pacienteId: ID!, status: StatusConsulta): [Consulta!]!
+
+  "Somente os atendimentos com data e hora posterior a agora, do mais proximo para o mais distante."
+  consultasFuturasPorPaciente(pacienteId: ID!, status: StatusConsulta): [Consulta!]!
+}

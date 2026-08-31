@@ -17,6 +17,8 @@ import tools.jackson.databind.ObjectMapper;
 @Component
 public class AcessoNegadoHandler implements AccessDeniedHandler {
 
+    public static final String MENSAGEM = "Seu perfil nao permite executar esta operacao.";
+
     private final ObjectMapper objectMapper;
 
     public AcessoNegadoHandler(ObjectMapper objectMapper) {
@@ -30,7 +32,7 @@ public class AcessoNegadoHandler implements AccessDeniedHandler {
 
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(
                 HttpStatus.FORBIDDEN,
-                "Seu perfil nao permite executar esta operacao.");
+                MENSAGEM);
         problema.setTitle("Acesso negado");
         problema.setInstance(URI.create(request.getRequestURI()));
 

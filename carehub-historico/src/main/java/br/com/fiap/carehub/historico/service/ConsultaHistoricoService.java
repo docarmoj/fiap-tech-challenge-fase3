@@ -4,6 +4,8 @@ import br.com.fiap.carehub.historico.dto.ConsultaEvent;
 import br.com.fiap.carehub.historico.enums.StatusConsulta;
 import br.com.fiap.carehub.historico.model.ConsultaHistorico;
 import br.com.fiap.carehub.historico.repository.ConsultaHistoricoRepository;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,5 +44,27 @@ public class ConsultaHistoricoService {
         consulta.setAtualizadoEm(event.ocorridoEm());
 
         consultaHistoricoRepository.save(consulta);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConsultaHistorico> buscarHistorico(Long pacienteId, StatusConsulta status) {
+
+        return status == null
+                ? consultaHistoricoRepository.findByPacienteIdOrderByDataHoraDesc(pacienteId)
+                : consultaHistoricoRepository
+                        .findByPacienteIdAndStatusOrderByDataHoraDesc(pacienteId, status);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConsultaHistorico> buscarFuturas(Long pacienteId, StatusConsulta status) {
+
+        LocalDateTime agora = LocalDateTime.now();
+
+        return status == null
+                ? consultaHistoricoRepository
+                        .findByPacienteIdAndDataHoraAfterOrderByDataHoraAsc(pacienteId, agora)
+                : consultaHistoricoRepository
+                        .findByPacienteIdAndDataHoraAfterAndStatusOrderByDataHoraAsc(
+                                pacienteId, agora, status);
     }
 }

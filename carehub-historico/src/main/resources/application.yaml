@@ -39,6 +39,12 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  # A interface interativa fica ligada de proposito: e documentacao viva do schema.
+  # Ela esta atras da mesma autenticacao das demais rotas.
+  graphql:
+    graphiql:
+      enabled: true
+
 carehub:
   rabbitmq:
     exchange: carehub.consultas.exchange
