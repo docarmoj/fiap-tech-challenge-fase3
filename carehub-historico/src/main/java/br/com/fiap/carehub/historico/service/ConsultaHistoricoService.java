@@ -18,8 +18,7 @@ public class ConsultaHistoricoService {
         this.consultaHistoricoRepository = consultaHistoricoRepository;
     }
 
-    // Upsert pela chave natural: mensagem reentregue nao duplica linha.
-    // Evento anterior ao estado ja gravado e descartado, entao reordenacao nao regride o dado.
+    // Atualiza a consulta se ela ja existe, senao cria. Evento antigo e ignorado.
     @Transactional
     public void registrar(ConsultaEvent event) {
 

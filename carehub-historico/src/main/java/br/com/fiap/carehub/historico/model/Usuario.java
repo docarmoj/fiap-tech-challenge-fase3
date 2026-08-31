@@ -14,9 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Credencial de acesso do servico de historico. O vinculo e guardado como id solto:
-// este banco nao replica os cadastros de paciente e de profissional, so precisa saber
-// a qual deles a credencial pertence.
+// Credenciais de acesso do servico de historico.
 @Entity
 @Table(name = "tb_usuario")
 @Data

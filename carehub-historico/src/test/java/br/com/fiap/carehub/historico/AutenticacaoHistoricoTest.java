@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// O servico de historico tem credenciais proprias, na tabela do proprio banco.
+// As credenciais do historico ficam na tabela do proprio banco.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

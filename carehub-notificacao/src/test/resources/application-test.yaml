@@ -1,6 +1,5 @@
-# Perfil de teste. A autoconfiguracao do RabbitMQ fica de fora de proposito: com ela ligada,
-# o container do @RabbitListener sobe junto com o contexto e, se houver um broker no ar,
-# a suite consome e confirma eventos reais da fila de notificacao, que somem para o servico.
+# Perfil de teste. O RabbitMQ fica de fora: com ele ligado, a suite consumiria
+# mensagens da fila de verdade.
 spring:
   autoconfigure:
     exclude: org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration

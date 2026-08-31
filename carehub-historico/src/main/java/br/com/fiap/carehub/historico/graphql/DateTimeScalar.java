@@ -20,7 +20,7 @@ public final class DateTimeScalar {
 
     public static final GraphQLScalarType INSTANCE = GraphQLScalarType.newScalar()
             .name("DateTime")
-            .description("Data e hora local no formato ISO-8601, sem fuso. Exemplo: 2030-09-15T10:00:00")
+            .description("Data e hora no formato 2030-09-15T10:00:00")
             .coercing(new Coercing<LocalDateTime, String>() {
 
                 @Override

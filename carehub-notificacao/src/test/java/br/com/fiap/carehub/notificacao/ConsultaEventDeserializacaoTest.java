@@ -11,10 +11,8 @@ import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// O evento e publicado pelo carehub-agendamento com mais campos do que este servico consome.
-// O DTO daqui declara so o que o listener usa; este teste prova que isso nao quebra.
-// O tipo vem do parametro do @RabbitListener (tipo inferido), e nao do header __TypeId__,
-// que carrega o nome da classe do agendamento e nao existe neste classpath.
+// O agendamento publica o evento com mais campos do que este servico usa.
+// Este teste prova que os campos a mais nao quebram a leitura da mensagem.
 @DisplayName("Desserializacao do evento de consulta")
 public class ConsultaEventDeserializacaoTest {
 

@@ -12,7 +12,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
-// Resposta 401: mantem o desafio WWW-Authenticate e devolve corpo em ProblemDetail
+// Resposta 401 para requisicao sem credencial valida
 @Component
 public class AutenticacaoEntryPoint implements AuthenticationEntryPoint {
 

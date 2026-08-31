@@ -5,8 +5,7 @@ import br.com.fiap.carehub.historico.service.ConsultaHistoricoService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-// O parametro tipado e o que faz o converter usar o tipo local em vez do header __TypeId__,
-// que carrega o nome da classe do carehub-agendamento e nao existe neste classpath.
+// Recebe o evento da fila e manda gravar no historico.
 @Component
 public class ConsultaHistoricoListener {
 

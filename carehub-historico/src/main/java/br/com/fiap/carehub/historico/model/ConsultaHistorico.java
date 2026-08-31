@@ -15,9 +15,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Read model alimentado pelo evento de consulta do carehub-agendamento.
-// Desnormalizado de proposito: nome de paciente e de profissional ficam na propria linha,
-// entao a leitura e um SELECT unico e o historico nao replica os cadastros.
+// Tabela do historico, preenchida pelos eventos do agendamento.
+// Os nomes ficam na propria linha para a consulta ler so esta tabela.
 @Entity
 @Table(name = "tb_consulta_historico")
 @Data

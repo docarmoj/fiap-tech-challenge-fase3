@@ -8,10 +8,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-// Principal do Spring Security. Carrega tambem pacienteId/profissionalId,
-// usados pelas regras de autorizacao das queries GraphQL.
-// Os dados sao copiados da entidade no construtor: o principal sobrevive ao
-// fechamento da sessao do JPA, entao nada aqui pode ser lazy.
+// Usuario logado. Guarda tambem o vinculo com paciente ou profissional,
+// usado nas regras de acesso.
 public class UsuarioAutenticado implements UserDetails {
 
     private final String username;
@@ -30,7 +28,7 @@ public class UsuarioAutenticado implements UserDetails {
         this.profissionalId = usuario.getProfissionalId();
     }
 
-    // O prefixo ROLE_ e adicionado aqui; no banco a coluna guarda so MEDICO/ENFERMEIRO/PACIENTE
+    // No banco a coluna guarda so MEDICO, ENFERMEIRO ou PACIENTE
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));

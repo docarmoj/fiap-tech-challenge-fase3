@@ -15,8 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// O listener e exercitado chamando o metodo diretamente, que e o que o broker faria.
-// Nenhum broker sobe na suite.
+// O listener e chamado direto, como o broker faria. Nenhum broker sobe na suite.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional

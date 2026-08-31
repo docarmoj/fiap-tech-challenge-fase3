@@ -11,8 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// A exchange e direct e a fila do historico usa a mesma routing key da fila de notificacao:
-// as duas filas recebem cada evento publicado pelo agendamento.
+// A fila do historico recebe os mesmos eventos da fila de notificacao.
 @Configuration
 public class RabbitMQConfig {
 

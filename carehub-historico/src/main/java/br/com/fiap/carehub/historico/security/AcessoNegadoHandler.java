@@ -12,8 +12,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
-// Resposta 403 para usuario autenticado sem permissao. As queries GraphQL usam o mesmo
-// texto de mensagem, para que a negativa seja identica nos dois servicos.
+// Resposta 403 para usuario sem permissao. As consultas GraphQL usam a mesma mensagem.
 @Component
 public class AcessoNegadoHandler implements AccessDeniedHandler {
 

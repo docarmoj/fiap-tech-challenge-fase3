@@ -13,8 +13,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-// Mesmas credenciais e mesmo modelo de perfil do carehub-agendamento, sobre a tabela
-// de usuarios deste banco. O endpoint GraphQL exige autenticacao como qualquer outra rota.
+// Mesmas credenciais e perfis do agendamento, na tabela de usuarios deste banco.
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
