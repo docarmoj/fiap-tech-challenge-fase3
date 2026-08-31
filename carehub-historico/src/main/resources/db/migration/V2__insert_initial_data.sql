@@ -3,6 +3,11 @@
 -- dado depois da primeira consulta criada com os servicos no ar.
 
 -- Mesmas credenciais do agendamento. Senha de todos: 123456 (BCrypt com prefixo {bcrypt}).
+-- ATENCAO: paciente_id e profissional_id sao literais porque este banco nao tem os cadastros
+-- para resolver por chave natural, como o V2 do agendamento faz. Os valores abaixo so batem
+-- enquanto as sequences de la produzirem 1..n nesta ordem. Mexer na ordem do seed do
+-- agendamento, ou inserir um paciente antes dele, desalinha os dois lados: a credencial
+-- passa a apontar para outro paciente e o vinculo autoriza o historico errado.
 INSERT INTO tb_usuario (username, password, role, ativo, paciente_id, profissional_id) VALUES
     ('medico1', '{bcrypt}$2a$10$PIDQJG3cXg5L3FZUWVieCuCXLrtRyytkCvVnGYlHMvyyE0OhGTwje', 'MEDICO', TRUE, NULL, 1),
     ('enfermeiro1', '{bcrypt}$2a$10$XCl6ty46Ooe7TAKMQ8ZjXeXVrdhjH1RywhDScSvcIg5zlbMFmUnle', 'ENFERMEIRO', TRUE, NULL, 2),

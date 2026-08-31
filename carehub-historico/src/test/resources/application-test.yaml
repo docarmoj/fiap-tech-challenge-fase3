@@ -1,10 +1,11 @@
 # Perfil de teste: H2 em modo PostgreSQL, roda as migrations reais do Flyway.
-# Nenhum broker sobe na suite: o listener e exercitado chamando o metodo diretamente.
+# A autoconfiguracao do RabbitMQ fica de fora de proposito. Com ela ligada, o container do
+# @RabbitListener sobe junto com o contexto mesmo com auto-startup: false, e se houver um
+# broker no ar a suite consome e confirma eventos reais da fila, que somem para o servico.
+# O listener e exercitado chamando o metodo diretamente, que e o que o broker faria.
 spring:
-  rabbitmq:
-    listener:
-      simple:
-        auto-startup: false
+  autoconfigure:
+    exclude: org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
   datasource:
     url: jdbc:h2:mem:carehub_historico_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
