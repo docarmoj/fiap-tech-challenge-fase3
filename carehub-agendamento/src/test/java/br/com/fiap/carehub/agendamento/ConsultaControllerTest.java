@@ -90,6 +90,12 @@ public class ConsultaControllerTest {
                         LocalDateTime.of(2026, 10, 20, 14, 30)
                 )
                         && event.acao().equals("CONSULTA_CRIADA")
+                        && event.profissionalId().equals(1L)
+                        && event.nomeProfissional() != null
+                        && !event.nomeProfissional().isBlank()
+                        && event.status().equals("AGENDADA")
+                        && event.observacoes().equals("Consulta criada pelo teste")
+                        && event.ocorridoEm() != null
         ));
     }
 
@@ -130,6 +136,12 @@ public class ConsultaControllerTest {
                         LocalDateTime.of(2026, 11, 10, 9, 0)
                 )
                         && event.acao().equals("CONSULTA_ALTERADA")
+                        && event.profissionalId().equals(1L)
+                        && event.nomeProfissional() != null
+                        && !event.nomeProfissional().isBlank()
+                        && event.status().equals("REALIZADA")
+                        && event.observacoes().equals("Consulta atualizada pelo teste")
+                        && event.ocorridoEm() != null
         ));
     }
 

@@ -20,7 +20,7 @@ public class ConsultaEventPublisherTest {
         ConsultaEventPublisher publisher = new ConsultaEventPublisher(
                 rabbitTemplate,
                 "carehub.consultas.exchange",
-                "consulta.notificacao"
+                "consulta.evento"
         );
 
         ConsultaEvent event = new ConsultaEvent(
@@ -28,15 +28,20 @@ public class ConsultaEventPublisherTest {
                 1L,
                 "Paciente Teste",
                 "paciente@teste.com",
+                1L,
+                "Profissional Teste",
                 LocalDateTime.of(2026, 10, 20, 14, 30),
-                "CONSULTA_CRIADA"
+                "AGENDADA",
+                "Consulta de rotina",
+                "CONSULTA_CRIADA",
+                LocalDateTime.of(2026, 10, 1, 8, 0)
         );
 
         publisher.publicar(event);
 
         verify(rabbitTemplate).convertAndSend(
                 "carehub.consultas.exchange",
-                "consulta.notificacao",
+                "consulta.evento",
                 event
         );
     }

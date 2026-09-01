@@ -1,5 +1,53 @@
+# Banco proprio do historico. Este servico nao acessa o banco do agendamento.
+server:
+  port: 8082
+
 spring:
   application:
     name: carehub-historico
-server:
-  port: 8082
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        missing-queues-fatal: false
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1s
+          max-interval: 10s
+          multiplier: 2.0
+          max-retries: 3
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/carehub_historico_db
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+  # Este servico roda as proprias migrations
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # Interface para testar as consultas no navegador, em /graphiql
+  graphql:
+    graphiql:
+      enabled: true
+
+carehub:
+  rabbitmq:
+    exchange: carehub.consultas.exchange
+    routing-key: consulta.evento
+    queue: carehub.historico.queue
+    dlx: carehub.consultas.dlx
+    dlq: carehub.historico.dlq
+    dlq-routing-key: consulta.historico.dlq

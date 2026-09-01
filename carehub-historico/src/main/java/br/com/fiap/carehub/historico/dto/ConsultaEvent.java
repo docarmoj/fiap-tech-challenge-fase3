@@ -1,8 +1,9 @@
-package br.com.fiap.carehub.agendamento.dto;
+package br.com.fiap.carehub.historico.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// Copia do evento publicado pelo carehub-agendamento.
 public record ConsultaEvent(
         Long consultaId,
         Long pacienteId,

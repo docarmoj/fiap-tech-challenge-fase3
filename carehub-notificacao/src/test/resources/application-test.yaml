@@ -1,0 +1,5 @@
+# Perfil de teste. O RabbitMQ fica de fora: com ele ligado, a suite consumiria
+# mensagens da fila de verdade.
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
