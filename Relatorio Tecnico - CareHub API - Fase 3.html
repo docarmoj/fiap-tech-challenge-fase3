@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Relatorio Tecnico - CareHub API - Fase 3</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="file:///C:/Project/fiap-tech-challenge-fase3/scripts/report-style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Relatorio Tecnico - CareHub API - Fase 3</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#carehub-api" id="toc-carehub-api">CareHub API</a>
+<ul>
+<li><a href="#relatório-técnico-de-entrega"
+id="toc-relatório-técnico-de-entrega">Relatório Técnico de
+Entrega</a></li>
+<li><a href="#índice" id="toc-índice">Índice</a></li>
+<li><a href="#descrição-da-arquitetura"
+id="toc-descrição-da-arquitetura">1. Descrição da Arquitetura</a>
+<ul>
+<li><a href="#visão-geral" id="toc-visão-geral">1.1 Visão Geral</a></li>
+<li><a href="#arquitetura-em-camadas"
+id="toc-arquitetura-em-camadas">1.2 Arquitetura em Camadas</a></li>
+<li><a href="#stack-tecnológico" id="toc-stack-tecnológico">1.3 Stack
+Tecnológico</a></li>
+<li><a href="#fluxos-principais" id="toc-fluxos-principais">1.4 Fluxos
+Principais</a></li>
+</ul></li>
+<li><a href="#modelagem-de-entidades-e-relacionamentos"
+id="toc-modelagem-de-entidades-e-relacionamentos">2. Modelagem de
+Entidades e Relacionamentos</a>
+<ul>
+<li><a href="#modelo-do-serviço-de-agendamento"
+id="toc-modelo-do-serviço-de-agendamento">2.1 Modelo do Serviço de
+Agendamento</a></li>
+<li><a href="#principais-entidades" id="toc-principais-entidades">2.2
+Principais Entidades</a></li>
+<li><a href="#modelo-do-serviço-de-histórico"
+id="toc-modelo-do-serviço-de-histórico">2.3 Modelo do Serviço de
+Histórico</a></li>
+</ul></li>
+<li><a href="#endpoints-e-consultas-disponíveis"
+id="toc-endpoints-e-consultas-disponíveis">3. Endpoints e Consultas
+Disponíveis</a>
+<ul>
+<li><a href="#rest-identificação-do-usuário"
+id="toc-rest-identificação-do-usuário">3.1 REST — Identificação do
+Usuário</a></li>
+<li><a href="#rest-listar-consultas" id="toc-rest-listar-consultas">3.2
+REST — Listar Consultas</a></li>
+<li><a href="#rest-buscar-consulta-por-id"
+id="toc-rest-buscar-consulta-por-id">3.3 REST — Buscar Consulta por
+ID</a></li>
+<li><a href="#rest-criar-consulta" id="toc-rest-criar-consulta">3.4 REST
+— Criar Consulta</a></li>
+<li><a href="#rest-atualizar-consulta"
+id="toc-rest-atualizar-consulta">3.5 REST — Atualizar Consulta</a></li>
+<li><a href="#graphql-histórico-por-paciente"
+id="toc-graphql-histórico-por-paciente">3.6 GraphQL — Histórico por
+Paciente</a></li>
+<li><a href="#graphql-consultas-futuras-por-paciente"
+id="toc-graphql-consultas-futuras-por-paciente">3.7 GraphQL — Consultas
+Futuras por Paciente</a></li>
+</ul></li>
+<li><a href="#segurança-autorização-e-validação"
+id="toc-segurança-autorização-e-validação">4. Segurança, Autorização e
+Validação</a>
+<ul>
+<li><a href="#autenticação" id="toc-autenticação">4.1
+Autenticação</a></li>
+<li><a href="#autorização-por-perfil"
+id="toc-autorização-por-perfil">4.2 Autorização por Perfil</a></li>
+<li><a href="#tratamento-de-erros" id="toc-tratamento-de-erros">4.3
+Tratamento de Erros</a></li>
+<li><a href="#restrições-de-banco" id="toc-restrições-de-banco">4.4
+Restrições de Banco</a></li>
+</ul></li>
+<li><a href="#comunicação-assíncrona" id="toc-comunicação-assíncrona">5.
+Comunicação Assíncrona</a>
+<ul>
+<li><a href="#publicação-de-eventos" id="toc-publicação-de-eventos">5.1
+Publicação de Eventos</a></li>
+<li><a href="#consumo-no-histórico" id="toc-consumo-no-histórico">5.2
+Consumo no Histórico</a></li>
+<li><a href="#consumo-na-notificação"
+id="toc-consumo-na-notificação">5.3 Consumo na Notificação</a></li>
+</ul></li>
+<li><a href="#coleção-postman" id="toc-coleção-postman">6. Coleção
+Postman</a></li>
+<li><a href="#estrutura-do-banco-de-dados"
+id="toc-estrutura-do-banco-de-dados">7. Estrutura do Banco de Dados</a>
+<ul>
+<li><a href="#banco-do-agendamento" id="toc-banco-do-agendamento">7.1
+Banco do Agendamento</a></li>
+<li><a href="#banco-do-histórico" id="toc-banco-do-histórico">7.2 Banco
+do Histórico</a></li>
+</ul></li>
+<li><a href="#guia-de-execução-com-docker-compose"
+id="toc-guia-de-execução-com-docker-compose">8. Guia de Execução com
+Docker Compose</a></li>
+<li><a href="#testes-automatizados" id="toc-testes-automatizados">9.
+Testes Automatizados</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="carehub-api">CareHub API</h1>
+<h2 id="relatório-técnico-de-entrega">Relatório Técnico de Entrega</h2>
+<p><strong>Versão:</strong> 1.0<br />
+<strong>Data:</strong> 05 de Setembro de 2026<br />
+<strong>Projeto:</strong> FIAP Tech Challenge - Fase 3<br />
+<strong>Stack:</strong> Java 21 | Spring Boot 4.1 | PostgreSQL |
+RabbitMQ | GraphQL | Docker<br />
+<strong>Link do repositório:</strong>
+https://github.com/docarmoj/fiap-tech-challenge-fase3</p>
+<hr />
+<h2 id="índice">Índice</h2>
+<ol type="1">
+<li>Descrição da Arquitetura</li>
+<li>Modelagem de Entidades e Relacionamentos</li>
+<li>Endpoints e Consultas Disponíveis</li>
+<li>Segurança, Autorização e Validação</li>
+<li>Comunicação Assíncrona</li>
+<li>Coleção Postman</li>
+<li>Estrutura do Banco de Dados</li>
+<li>Guia de Execução com Docker Compose</li>
+<li>Testes Automatizados</li>
+<li>Pendências e Evoluções Recomendadas</li>
+</ol>
+<hr />
+<h2 id="descrição-da-arquitetura">1. Descrição da Arquitetura</h2>
+<h3 id="visão-geral">1.1 Visão Geral</h3>
+<p>O CareHub é um backend modular voltado ao contexto hospitalar, com
+foco em agendamento de consultas, consulta ao histórico do paciente e
+geração de notificações assíncronas. O repositório foi organizado como
+<strong>monorepo com três serviços Spring Boot independentes</strong>,
+cada um com responsabilidade específica.</p>
+<p><strong>Serviços da solução</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Serviço</th>
+<th>Porta</th>
+<th>Responsabilidade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>carehub-agendamento</code></td>
+<td><code>8081</code></td>
+<td>autenticação HTTP Basic, autorização por perfil e API REST de
+consultas</td>
+</tr>
+<tr>
+<td><code>carehub-historico</code></td>
+<td><code>8082</code></td>
+<td>persistência do histórico consumido por eventos e API GraphQL</td>
+</tr>
+<tr>
+<td><code>carehub-notificacao</code></td>
+<td><code>8083</code></td>
+<td>consumo de eventos e geração de lembretes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Infraestrutura de apoio</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL</td>
+<td>persistência dos serviços <code>agendamento</code> e
+<code>historico</code></td>
+</tr>
+<tr>
+<td>RabbitMQ</td>
+<td>entrega assíncrona dos eventos de criação e atualização de
+consulta</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>inicialização da infraestrutura compartilhada</td>
+</tr>
+</tbody>
+</table>
+<h3 id="arquitetura-em-camadas">1.2 Arquitetura em Camadas</h3>
+<p>Os serviços seguem arquitetura em camadas:</p>
+<ul>
+<li><strong>Controller / GraphQL Controller:</strong> recebe requisições
+HTTP ou GraphQL</li>
+<li><strong>Service:</strong> concentra regras de negócio</li>
+<li><strong>Repository:</strong> acesso a dados via Spring Data JPA</li>
+<li><strong>Model / Entity:</strong> mapeamento das tabelas de
+banco</li>
+<li><strong>Config / Security / Messaging:</strong> configuração de
+segurança, filas e beans Spring</li>
+</ul>
+<h3 id="stack-tecnológico">1.3 Stack Tecnológico</h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Versão</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java</td>
+<td>21</td>
+<td>linguagem principal</td>
+</tr>
+<tr>
+<td>Spring Boot</td>
+<td>4.1.0</td>
+<td>framework base</td>
+</tr>
+<tr>
+<td>Spring Web MVC</td>
+<td>4.1.0</td>
+<td>endpoints REST</td>
+</tr>
+<tr>
+<td>Spring Security</td>
+<td>4.1.0</td>
+<td>autenticação e autorização</td>
+</tr>
+<tr>
+<td>Spring Data JPA</td>
+<td>4.1.0</td>
+<td>persistência ORM</td>
+</tr>
+<tr>
+<td>Spring for GraphQL</td>
+<td>4.1.0</td>
+<td>consultas GraphQL no histórico</td>
+</tr>
+<tr>
+<td>Spring AMQP</td>
+<td>4.1.0</td>
+<td>integração com RabbitMQ</td>
+</tr>
+<tr>
+<td>Flyway</td>
+<td>11.x</td>
+<td>migrations de banco</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>16</td>
+<td>banco relacional no runtime local</td>
+</tr>
+<tr>
+<td>H2</td>
+<td>2.4.x</td>
+<td>banco em memória nos testes</td>
+</tr>
+<tr>
+<td>Lombok</td>
+<td>-</td>
+<td>redução de boilerplate</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>-</td>
+<td>provisionamento local</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fluxos-principais">1.4 Fluxos Principais</h3>
+<p><strong>Fluxo REST de agendamento</strong></p>
+<p>Cliente HTTP → <code>ConsultaController</code> →
+<code>ConsultaService</code> → <code>ConsultaRepository</code> →
+PostgreSQL</p>
+<p><strong>Fluxo assíncrono</strong></p>
+<p><code>carehub-agendamento</code> →
+<code>ConsultaEventPublisher</code> → RabbitMQ →
+<code>carehub-notificacao</code> / <code>carehub-historico</code></p>
+<p><strong>Fluxo GraphQL</strong></p>
+<p>Cliente GraphQL → <code>HistoricoGraphQlController</code> →
+<code>ConsultaHistoricoService</code> →
+<code>ConsultaHistoricoRepository</code> → PostgreSQL do histórico</p>
+<hr />
+<h2 id="modelagem-de-entidades-e-relacionamentos">2. Modelagem de
+Entidades e Relacionamentos</h2>
+<h3 id="modelo-do-serviço-de-agendamento">2.1 Modelo do Serviço de
+Agendamento</h3>
+<p>O serviço de agendamento mantém o domínio principal da aplicação.</p>
+<pre class="text"><code>tb_paciente (1) ──────&lt; tb_consulta &gt;────── (1) tb_profissional
+      ^                                         ^
+      |                                         |
+      +──────────── tb_usuario ─────────────────+</code></pre>
+<h3 id="principais-entidades">2.2 Principais Entidades</h3>
+<h4 id="paciente-tb_paciente">Paciente (<code>tb_paciente</code>)</h4>
+<p>Representa o paciente atendido pela instituição.</p>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Tipo</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Long</td>
+<td>identificador</td>
+</tr>
+<tr>
+<td><code>nome</code></td>
+<td>String</td>
+<td>nome do paciente</td>
+</tr>
+<tr>
+<td><code>cpf</code></td>
+<td>String</td>
+<td>CPF único</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>String</td>
+<td>e-mail único</td>
+</tr>
+<tr>
+<td><code>telefone</code></td>
+<td>String</td>
+<td>telefone de contato</td>
+</tr>
+</tbody>
+</table>
+<h4 id="profissional-tb_profissional">Profissional
+(<code>tb_profissional</code>)</h4>
+<p>Representa médicos e enfermeiros.</p>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Tipo</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Long</td>
+<td>identificador</td>
+</tr>
+<tr>
+<td><code>nome</code></td>
+<td>String</td>
+<td>nome do profissional</td>
+</tr>
+<tr>
+<td><code>registroProfissional</code></td>
+<td>String</td>
+<td>CRM/COREN</td>
+</tr>
+<tr>
+<td><code>tipo</code></td>
+<td>Enum</td>
+<td><code>MEDICO</code> ou <code>ENFERMEIRO</code></td>
+</tr>
+<tr>
+<td><code>especialidade</code></td>
+<td>String</td>
+<td>especialidade ou área</td>
+</tr>
+</tbody>
+</table>
+<h4 id="usuario-tb_usuario">Usuario (<code>tb_usuario</code>)</h4>
+<p>Credencial de autenticação associada a um paciente ou
+profissional.</p>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Tipo</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Long</td>
+<td>identificador</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>String</td>
+<td>login</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>String</td>
+<td>senha criptografada com BCrypt</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>Enum</td>
+<td><code>MEDICO</code>, <code>ENFERMEIRO</code>,
+<code>PACIENTE</code></td>
+</tr>
+<tr>
+<td><code>ativo</code></td>
+<td>boolean</td>
+<td>habilita ou bloqueia acesso</td>
+</tr>
+<tr>
+<td><code>paciente_id</code></td>
+<td>Long</td>
+<td>vínculo para paciente</td>
+</tr>
+<tr>
+<td><code>profissional_id</code></td>
+<td>Long</td>
+<td>vínculo para profissional</td>
+</tr>
+</tbody>
+</table>
+<h4 id="consulta-tb_consulta">Consulta (<code>tb_consulta</code>)</h4>
+<p>Representa a consulta agendada.</p>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Tipo</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>Long</td>
+<td>identificador</td>
+</tr>
+<tr>
+<td><code>paciente_id</code></td>
+<td>Long</td>
+<td>paciente da consulta</td>
+</tr>
+<tr>
+<td><code>profissional_id</code></td>
+<td>Long</td>
+<td>profissional responsável</td>
+</tr>
+<tr>
+<td><code>data_hora</code></td>
+<td>LocalDateTime</td>
+<td>data e hora da consulta</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>Enum</td>
+<td><code>AGENDADA</code>, <code>REALIZADA</code>,
+<code>CANCELADA</code></td>
+</tr>
+<tr>
+<td><code>observacoes</code></td>
+<td>String</td>
+<td>informações complementares</td>
+</tr>
+</tbody>
+</table>
+<h3 id="modelo-do-serviço-de-histórico">2.3 Modelo do Serviço de
+Histórico</h3>
+<p>O serviço <code>carehub-historico</code> mantém uma projeção própria
+do histórico consumido por eventos, desacoplada do banco do
+agendamento.</p>
+<pre class="text"><code>tb_usuario
+
+tb_consulta_historico
+  - consulta_id
+  - paciente_id
+  - paciente_nome
+  - profissional_id
+  - profissional_nome
+  - data_hora
+  - status
+  - observacoes
+  - atualizado_em</code></pre>
+<p>Esse desenho favorece leitura rápida no GraphQL e evita dependência
+direta do banco transacional do agendamento.</p>
+<hr />
+<h2 id="endpoints-e-consultas-disponíveis">3. Endpoints e Consultas
+Disponíveis</h2>
+<h3 id="rest-identificação-do-usuário">3.1 REST — Identificação do
+Usuário</h3>
+<p><strong>GET</strong> <code>/usuarios/me</code> →
+<code>200 OK</code></p>
+<p>Retorna o usuário autenticado e seus vínculos de domínio.</p>
+<p><strong>Exemplo de resposta</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;username&quot;</span><span class="fu">:</span> <span class="st">&quot;medico1&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;role&quot;</span><span class="fu">:</span> <span class="st">&quot;MEDICO&quot;</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;profissionalId&quot;</span><span class="fu">:</span> <span class="dv">1</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="rest-listar-consultas">3.2 REST — Listar Consultas</h3>
+<p><strong>GET</strong> <code>/consultas</code> →
+<code>200 OK</code></p>
+<p>Comportamento por perfil:</p>
+<ul>
+<li><code>MEDICO</code> e <code>ENFERMEIRO</code>: listam consultas de
+todos os pacientes</li>
+<li><code>PACIENTE</code>: lista apenas as próprias consultas</li>
+</ul>
+<p><strong>Exemplo de resposta</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;pacienteId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;pacienteNome&quot;</span><span class="fu">:</span> <span class="st">&quot;Joao Silva&quot;</span><span class="fu">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;profissionalId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;profissionalNome&quot;</span><span class="fu">:</span> <span class="st">&quot;Dr. Carlos Eduardo&quot;</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;dataHora&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-03-10T09:00:00&quot;</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;REALIZADA&quot;</span><span class="fu">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;observacoes&quot;</span><span class="fu">:</span> <span class="st">&quot;Consulta de rotina - retorno em 6 meses&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div>
+<h3 id="rest-buscar-consulta-por-id">3.3 REST — Buscar Consulta por
+ID</h3>
+<p><strong>GET</strong> <code>/consultas/{id}</code> →
+<code>200 OK | 403 Forbidden | 404 Not Found</code></p>
+<ul>
+<li>profissionais podem consultar qualquer consulta</li>
+<li>pacientes só podem consultar consultas próprias</li>
+</ul>
+<h3 id="rest-criar-consulta">3.4 REST — Criar Consulta</h3>
+<p><strong>POST</strong> <code>/consultas</code> →
+<code>201 Created | 400 Bad Request</code></p>
+<p>Disponível para <code>MEDICO</code> e <code>ENFERMEIRO</code>.</p>
+<p><strong>Request Body</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;pacienteId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;profissionalId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dataHora&quot;</span><span class="fu">:</span> <span class="st">&quot;2030-12-01T09:00:00&quot;</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;observacoes&quot;</span><span class="fu">:</span> <span class="st">&quot;Consulta criada pelo Postman&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Validações</strong></p>
+<ul>
+<li><code>pacienteId</code> obrigatório</li>
+<li><code>profissionalId</code> obrigatório</li>
+<li><code>dataHora</code> obrigatória e futura</li>
+<li><code>observacoes</code> com no máximo 1000 caracteres</li>
+</ul>
+<h3 id="rest-atualizar-consulta">3.5 REST — Atualizar Consulta</h3>
+<p><strong>PUT</strong> <code>/consultas/{id}</code> →
+<code>200 OK | 400 Bad Request | 404 Not Found</code></p>
+<p>Disponível para <code>MEDICO</code> e <code>ENFERMEIRO</code>.</p>
+<p><strong>Request Body</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;pacienteId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;profissionalId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dataHora&quot;</span><span class="fu">:</span> <span class="st">&quot;2030-12-02T14:00:00&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;REALIZADA&quot;</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;observacoes&quot;</span><span class="fu">:</span> <span class="st">&quot;Atualizada pelo Postman&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Validações</strong></p>
+<ul>
+<li><code>pacienteId</code> obrigatório</li>
+<li><code>profissionalId</code> obrigatório</li>
+<li><code>dataHora</code> obrigatória e futura</li>
+<li><code>status</code> obrigatório</li>
+<li><code>observacoes</code> com no máximo 1000 caracteres</li>
+</ul>
+<h3 id="graphql-histórico-por-paciente">3.6 GraphQL — Histórico por
+Paciente</h3>
+<p><strong>POST</strong> <code>/graphql</code></p>
+<p>Query disponível no serviço <code>carehub-historico</code>.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode graphql"><code class="sourceCode graphql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">query</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  historicoPorPaciente(pacienteId: <span class="st">&quot;1&quot;</span>) {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    id</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    dataHora</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    status</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    observacoes</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    paciente {</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      id</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      nome</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    profissional {</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>      id</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>      nome</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="graphql-consultas-futuras-por-paciente">3.7 GraphQL — Consultas
+Futuras por Paciente</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode graphql"><code class="sourceCode graphql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">query</span> {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  consultasFuturasPorPaciente(pacienteId: <span class="st">&quot;1&quot;</span>) {</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    id</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    dataHora</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    status</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Regras de acesso</strong></p>
+<ul>
+<li><code>MEDICO</code> e <code>ENFERMEIRO</code> consultam qualquer
+paciente</li>
+<li><code>PACIENTE</code> consulta apenas o próprio histórico</li>
+</ul>
+<hr />
+<h2 id="segurança-autorização-e-validação">4. Segurança, Autorização e
+Validação</h2>
+<h3 id="autenticação">4.1 Autenticação</h3>
+<p>Os serviços <code>carehub-agendamento</code> e
+<code>carehub-historico</code> utilizam <strong>HTTP Basic</strong> com
+Spring Security.</p>
+<p>Credenciais de carga inicial:</p>
+<ul>
+<li><code>medico1 / 123456</code></li>
+<li><code>enfermeiro1 / 123456</code></li>
+<li><code>paciente1 / 123456</code></li>
+<li><code>paciente2 / 123456</code></li>
+<li><code>inativo1 / 123456</code></li>
+</ul>
+<h3 id="autorização-por-perfil">4.2 Autorização por Perfil</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Perfil</th>
+<th>Permissões</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MEDICO</code></td>
+<td>visualizar e editar consultas; consultar histórico</td>
+</tr>
+<tr>
+<td><code>ENFERMEIRO</code></td>
+<td>registrar e editar consultas; consultar histórico</td>
+</tr>
+<tr>
+<td><code>PACIENTE</code></td>
+<td>visualizar apenas as próprias consultas e o próprio histórico</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tratamento-de-erros">4.3 Tratamento de Erros</h3>
+<p>Nos endpoints HTTP, erros de autenticação, autorização e validação
+retornam <code>application/problem+json</code>.</p>
+<p><strong>Exemplo de erro de validação</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;about:blank&quot;</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Erro de validação&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">400</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;detail&quot;</span><span class="fu">:</span> <span class="st">&quot;A requisição contém campos inválidos.&quot;</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;instance&quot;</span><span class="fu">:</span> <span class="st">&quot;/consultas&quot;</span><span class="fu">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;errors&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;pacienteId&quot;</span><span class="fu">:</span> <span class="st">&quot;pacienteId é obrigatório&quot;</span><span class="fu">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;dataHora&quot;</span><span class="fu">:</span> <span class="st">&quot;dataHora deve estar no futuro&quot;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="restrições-de-banco">4.4 Restrições de Banco</h3>
+<p>As migrations também reforçam integridade:</p>
+<ul>
+<li><code>username</code>, <code>cpf</code>, <code>email</code> e
+<code>registro_profissional</code> únicos</li>
+<li><code>check constraint</code> para coerência entre <code>role</code>
+e vínculo de domínio</li>
+<li>índices em chaves estrangeiras e <code>data_hora</code></li>
+</ul>
+<hr />
+<h2 id="comunicação-assíncrona">5. Comunicação Assíncrona</h2>
+<h3 id="publicação-de-eventos">5.1 Publicação de Eventos</h3>
+<p>Sempre que uma consulta é criada ou alterada, o serviço
+<code>carehub-agendamento</code> publica um evento no RabbitMQ.</p>
+<p><strong>Campos relevantes do evento</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;consultaId&quot;</span><span class="fu">:</span> <span class="dv">10</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;pacienteId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;nomePaciente&quot;</span><span class="fu">:</span> <span class="st">&quot;Joao Silva&quot;</span><span class="fu">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;emailPaciente&quot;</span><span class="fu">:</span> <span class="st">&quot;joao.silva@email.com&quot;</span><span class="fu">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;profissionalId&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;nomeProfissional&quot;</span><span class="fu">:</span> <span class="st">&quot;Dr. Carlos Eduardo&quot;</span><span class="fu">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dataHora&quot;</span><span class="fu">:</span> <span class="st">&quot;2030-12-01T09:00:00&quot;</span><span class="fu">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;AGENDADA&quot;</span><span class="fu">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;observacoes&quot;</span><span class="fu">:</span> <span class="st">&quot;Consulta criada&quot;</span><span class="fu">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;acao&quot;</span><span class="fu">:</span> <span class="st">&quot;CONSULTA_CRIADA&quot;</span><span class="fu">,</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ocorridoEm&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-09-05T13:47:00&quot;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="consumo-no-histórico">5.2 Consumo no Histórico</h3>
+<p>O <code>carehub-historico</code> consome a fila
+<code>carehub.historico.queue</code> e persiste o estado mais recente da
+consulta em <code>tb_consulta_historico</code>.</p>
+<p>Características:</p>
+<ul>
+<li>atualização idempotente por <code>consulta_id</code></li>
+<li>descarte de eventos antigos via campo
+<code>atualizado_em</code></li>
+<li>leitura otimizada para GraphQL</li>
+</ul>
+<h3 id="consumo-na-notificação">5.3 Consumo na Notificação</h3>
+<p>O <code>carehub-notificacao</code> consome a fila
+<code>carehub.notificacoes.queue</code> e gera lembretes com assunto e
+mensagem variando conforme a ação (<code>CONSULTA_CRIADA</code> ou
+<code>CONSULTA_ALTERADA</code>).</p>
+<p>Atualmente o envio é feito por <strong>log/console</strong>.</p>
+<hr />
+<h2 id="coleção-postman">6. Coleção Postman</h2>
+<p>A collection está em:</p>
+<p><code>docs/carehub.postman_collection.json</code></p>
+<p>Cobertura incluída:</p>
+<ul>
+<li>autenticação</li>
+<li>matriz de autorização REST</li>
+<li>criação e atualização de consultas</li>
+<li>testes do GraphQL do histórico</li>
+</ul>
+<p><strong>Variáveis principais</strong></p>
+<table>
+<thead>
+<tr>
+<th>Variável</th>
+<th>Valor padrão</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baseUrl</code></td>
+<td><code>http://localhost:8081</code></td>
+</tr>
+<tr>
+<td><code>baseUrlHistorico</code></td>
+<td><code>http://localhost:8082</code></td>
+</tr>
+<tr>
+<td><code>senha</code></td>
+<td><code>123456</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="estrutura-do-banco-de-dados">7. Estrutura do Banco de Dados</h2>
+<h3 id="banco-do-agendamento">7.1 Banco do Agendamento</h3>
+<p>Tabelas principais:</p>
+<ul>
+<li><code>tb_paciente</code></li>
+<li><code>tb_profissional</code></li>
+<li><code>tb_usuario</code></li>
+<li><code>tb_consulta</code></li>
+</ul>
+<p>Carga inicial:</p>
+<ul>
+<li>3 pacientes</li>
+<li>2 profissionais</li>
+<li>5 usuários de autenticação</li>
+<li>4 consultas base</li>
+</ul>
+<h3 id="banco-do-histórico">7.2 Banco do Histórico</h3>
+<p>Tabelas principais:</p>
+<ul>
+<li><code>tb_usuario</code></li>
+<li><code>tb_consulta_historico</code></li>
+</ul>
+<p>O histórico possui carga inicial própria para manter consistência dos
+testes e permitir consulta GraphQL mesmo antes de novos eventos no
+broker.</p>
+<hr />
+<h2 id="guia-de-execução-com-docker-compose">8. Guia de Execução com
+Docker Compose</h2>
+<p>O arquivo <code>docker-compose.yml</code> sobe:</p>
+<ul>
+<li>RabbitMQ</li>
+<li>PostgreSQL</li>
+</ul>
+<p><strong>Subir infraestrutura</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>docker compose up <span class="op">-</span>d</span></code></pre></div>
+<p><strong>Subir serviços</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cd</span> carehub-agendamento</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>mvnw<span class="op">.</span><span class="fu">cmd</span> spring-boot<span class="op">:</span>run</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cd</span> carehub-historico</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>mvnw<span class="op">.</span><span class="fu">cmd</span> spring-boot<span class="op">:</span>run</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cd</span> carehub-notificacao</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>mvnw<span class="op">.</span><span class="fu">cmd</span> spring-boot<span class="op">:</span>run</span></code></pre></div>
+<hr />
+<h2 id="testes-automatizados">9. Testes Automatizados</h2>
+<p>O projeto possui testes cobrindo:</p>
+<ul>
+<li>autenticação HTTP Basic</li>
+<li>autorização por perfil e vínculo</li>
+<li>criação e atualização de consultas</li>
+<li>publicação e consumo de eventos</li>
+<li>queries GraphQL do histórico</li>
+</ul>
+<p><strong>Situação da entrega</strong></p>
+<ul>
+<li><code>carehub-agendamento</code>: testes passando</li>
+<li><code>carehub-historico</code>: testes passando</li>
+<li><code>carehub-notificacao</code>: testes passando</li>
+</ul>
+</body>
+</html>

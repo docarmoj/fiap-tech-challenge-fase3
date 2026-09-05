@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -151,5 +152,30 @@ public class ConsultaControllerTest {
         mockMvc.perform(get("/consultas/999")
                         .with(user(medicoAutenticado())))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveRejeitarCriacaoComDadosInvalidos() throws Exception {
+
+        String requestBody = """
+                {
+                  "pacienteId": null,
+                  "profissionalId": 1,
+                  "dataHora": "2020-10-20T14:30:00",
+                  "observacoes": "%s"
+                }
+                """.formatted("x".repeat(1001));
+
+        mockMvc.perform(post("/consultas")
+                        .with(user(medicoAutenticado()))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+                .andExpect(jsonPath("$.title").value("Erro de validação"))
+                .andExpect(jsonPath("$.errors.pacienteId").exists())
+                .andExpect(jsonPath("$.errors.dataHora").exists())
+                .andExpect(jsonPath("$.errors.observacoes").exists());
     }
 }

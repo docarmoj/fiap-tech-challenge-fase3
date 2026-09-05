@@ -4,13 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 
 // Resposta 401 para requisicao sem credencial valida
 @Component
@@ -18,16 +19,10 @@ public class AutenticacaoEntryPoint implements AuthenticationEntryPoint {
 
     private static final String REALM = "carehub";
 
-    private final ObjectMapper objectMapper;
-
-    public AutenticacaoEntryPoint(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
     @Override
     public void commence(HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException) throws IOException {
+                         HttpServletResponse response,
+                         @NonNull AuthenticationException authException) throws IOException {
 
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
@@ -38,6 +33,14 @@ public class AutenticacaoEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setHeader("WWW-Authenticate", "Basic realm=\"" + REALM + "\"");
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), problema);
+        response.getWriter().write("""
+                {
+                  "type":"about:blank",
+                  "title":"Nao autenticado",
+                  "status":401,
+                  "detail":"Credenciais ausentes ou invalidas. Use autenticacao basica (usuario e senha).",
+                  "instance":"%s"
+                }
+                """.formatted(request.getRequestURI()).replace("\r", "").replace("\n", ""));
     }
 }

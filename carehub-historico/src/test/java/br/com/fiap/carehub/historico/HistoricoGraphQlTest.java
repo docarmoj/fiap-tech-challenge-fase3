@@ -4,7 +4,6 @@ import br.com.fiap.carehub.historico.enums.Role;
 import br.com.fiap.carehub.historico.model.Usuario;
 import br.com.fiap.carehub.historico.security.AcessoNegadoHandler;
 import br.com.fiap.carehub.historico.security.UsuarioAutenticado;
-import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import tools.jackson.databind.ObjectMapper;
-
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,9 +26,6 @@ public class HistoricoGraphQlTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void medicoVeOHistoricoDeQualquerPaciente() throws Exception {
@@ -142,8 +136,9 @@ public class HistoricoGraphQlTest {
     @Test
     void requisicaoSemCredencialNaoAlcancaOEndpointGraphQl() throws Exception {
 
-        String corpo = objectMapper.writeValueAsString(
-                Map.of("query", "{ historicoPorPaciente(pacienteId: \"1\") { id } }"));
+        String corpo = """
+                {"query":"{ historicoPorPaciente(pacienteId: \\"1\\") { id } }"}
+                """;
 
         mockMvc.perform(post("/graphql")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -153,12 +148,20 @@ public class HistoricoGraphQlTest {
 
     private ResultActions executar(String query, UsuarioAutenticado usuario) throws Exception {
 
-        String corpo = objectMapper.writeValueAsString(Map.of("query", query));
+        String corpo = "{\"query\":%s}".formatted(quote(query));
 
         return mockMvc.perform(post("/graphql")
                 .with(user(usuario))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(corpo));
+    }
+
+    private String quote(String value) {
+        return "\"" + value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n") + "\"";
     }
 
     private UsuarioAutenticado medico() {
