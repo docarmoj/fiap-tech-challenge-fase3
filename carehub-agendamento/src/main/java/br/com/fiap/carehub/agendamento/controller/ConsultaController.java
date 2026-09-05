@@ -7,6 +7,7 @@ import br.com.fiap.carehub.agendamento.model.Consulta;
 import br.com.fiap.carehub.agendamento.security.AutorizacaoService;
 import br.com.fiap.carehub.agendamento.security.UsuarioAutenticado;
 import br.com.fiap.carehub.agendamento.service.ConsultaService;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,7 +60,7 @@ public class ConsultaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
-    public ConsultaResponse criarConsulta(@RequestBody ConsultaRequest request) {
+    public ConsultaResponse criarConsulta(@Valid @RequestBody ConsultaRequest request) {
 
         return toResponse(consultaService.criarConsulta(request));
     }
@@ -68,7 +69,7 @@ public class ConsultaController {
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
     public ConsultaResponse atualizarConsulta(
             @PathVariable Long id,
-            @RequestBody ConsultaUpdateRequest request) {
+            @Valid @RequestBody ConsultaUpdateRequest request) {
 
         return toResponse(consultaService.atualizarConsulta(id, request));
     }
