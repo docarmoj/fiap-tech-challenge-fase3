@@ -1,0 +1,1208 @@
+{
+  "info": {
+    "name": "CareHub - Tech Challenge Fase 3",
+    "description": "Demonstra os endpoints do CareHub e valida autenticacao, perfis MEDICO/ENFERMEIRO/PACIENTE, criacao e alteracao de consultas, leitura autorizada e acessos negados.\n\nImporte e selecione o Environment 'CareHub - Local' antes de executar.\n\nAntes de rodar:\n1. docker compose up -d\n2. cd carehub-agendamento && ./mvnw spring-boot:run\n3. cd carehub-historico && ./mvnw spring-boot:run\n\nA pasta 'Matriz de autorizacao' deve ser executada na ordem pelo Collection Runner, pois a consulta criada pelo MEDICO e reutilizada na requisicao seguinte. Cada requisicao possui testes automaticos do resultado esperado.\n\nO carehub-historico (8082) expoe GraphQL em /graphql e GraphiQL em /graphiql. A pasta 'Historico GraphQL (8082)' exige esse servico no ar. O carehub-notificacao (8083) apenas consome a fila e nao possui endpoint HTTP.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "consultaCriada",
+      "value": "",
+      "description": "Preenchida automaticamente apos a requisicao 'MEDICO cria consulta'."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const obrigatorias = ['baseUrl', 'baseUrlHistorico', 'medicoUsername', 'enfermeiroUsername', 'paciente1Username', 'paciente2Username', 'usuarioInativoUsername', 'senha', 'paciente1Id', 'paciente2Id', 'profissionalMedicoId', 'profissionalEnfermeiroId', 'consultaPaciente1', 'consultaPaciente2'];",
+          "const ausentes = obrigatorias.filter(chave => !pm.variables.get(chave));",
+          "if (ausentes.length) { throw new Error(`Selecione o Environment 'CareHub - Local'. Variaveis ausentes: ${ausentes.join(', ')}`); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticacao",
+      "item": [
+        {
+          "name": "Sem credenciais - espera 401",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 sem credenciais', () => pm.response.to.have.status(401));",
+                  "pm.test('desafia com WWW-Authenticate', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.include('Basic'));",
+                  "pm.test('corpo em ProblemDetail', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Senha errada - espera 401",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "senha-errada" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 com senha errada', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario inativo - espera 401",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{usuarioInativoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('401 para credencial desativada', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - medico1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('perfil MEDICO', () => pm.expect(b.role).to.eql('MEDICO'));",
+                  "pm.test('vinculado a um profissional', () => pm.expect(b.profissionalId).to.not.be.undefined);",
+                  "pm.test('sem vinculo de paciente', () => pm.expect(b.pacienteId).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - enfermeiro1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{enfermeiroUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('perfil ENFERMEIRO', () => pm.expect(pm.response.json().role).to.eql('ENFERMEIRO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - paciente1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente1Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('perfil PACIENTE', () => pm.expect(b.role).to.eql('PACIENTE'));",
+                  "pm.test('vinculado a um paciente', () => pm.expect(b.pacienteId).to.not.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu - paciente2",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente2Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios/me", "host": ["{{baseUrl}}"], "path": ["usuarios", "me"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Matriz de autorizacao",
+      "item": [
+        {
+          "name": "MEDICO lista todas as consultas",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(c => c.pacienteId);",
+                  "pm.test('enxerga mais de um paciente', () => pm.expect(new Set(ids).size).to.be.above(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO busca consulta de outro paciente",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('200 - medico acessa qualquer consulta', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO cria consulta",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": {{paciente1Id}},\n  \"profissionalId\": {{profissionalMedicoId}},\n  \"dataHora\": \"2030-12-01T09:00:00\",\n  \"observacoes\": \"Consulta criada pelo Postman\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.test('nasce AGENDADA', () => pm.expect(pm.response.json().status).to.eql('AGENDADA'));",
+                  "pm.collectionVariables.set('consultaCriada', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO atualiza a consulta criada",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": {{paciente1Id}},\n  \"profissionalId\": {{profissionalMedicoId}},\n  \"dataHora\": \"2030-12-02T14:00:00\",\n  \"status\": \"REALIZADA\",\n  \"observacoes\": \"Atualizada pelo Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaCriada}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaCriada}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('status alterado', () => pm.expect(pm.response.json().status).to.eql('REALIZADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ENFERMEIRO lista todas as consultas",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{enfermeiroUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(c => c.pacienteId);",
+                  "pm.test('enxerga mais de um paciente', () => pm.expect(new Set(ids).size).to.be.above(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ENFERMEIRO registra consulta",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{enfermeiroUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": {{paciente2Id}},\n  \"profissionalId\": {{profissionalEnfermeiroId}},\n  \"dataHora\": \"2030-12-05T11:00:00\",\n  \"observacoes\": \"Triagem registrada pelo Postman\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('201 - enfermeiro registra consulta', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE lista somente as proprias",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente2Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const corpo = pm.response.json();",
+                  "pm.test('retornou alguma consulta', () => pm.expect(corpo.length).to.be.above(0));",
+                  "const pacienteId = Number(pm.variables.get('paciente2Id'));",
+                  "pm.test('todas sao do proprio paciente', () => corpo.forEach(c => pm.expect(c.pacienteId).to.eql(pacienteId)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE busca consulta propria",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente2Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('e a consulta dele', () => pm.expect(pm.response.json().pacienteId).to.eql(Number(pm.variables.get('paciente2Id'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE busca consulta de outro - espera 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente1Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente2}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente2}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));",
+                  "pm.test('corpo em ProblemDetail', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "pm.test('traz title e status', () => { const b = pm.response.json(); pm.expect(b.title).to.be.a('string'); pm.expect(b.status).to.eql(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE tenta criar consulta - espera 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente1Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": {{paciente1Id}},\n  \"profissionalId\": {{profissionalMedicoId}},\n  \"dataHora\": \"2030-12-10T09:00:00\",\n  \"observacoes\": \"Paciente nao pode agendar\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultas", "host": ["{{baseUrl}}"], "path": ["consultas"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 - registrar consulta e do profissional', () => pm.response.to.have.status(403));",
+                  "pm.test('mesmo formato de erro', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE tenta atualizar consulta - espera 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{paciente1Username}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": {{paciente1Id}},\n  \"profissionalId\": {{profissionalMedicoId}},\n  \"dataHora\": \"2030-12-11T09:00:00\",\n  \"status\": \"CANCELADA\",\n  \"observacoes\": \"Paciente nao pode alterar\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/consultas/{{consultaPaciente1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultas", "{{consultaPaciente1}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('403 - alterar consulta e do profissional', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consulta inexistente - espera 404",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{medicoUsername}}" },
+                { "key": "password", "value": "{{senha}}" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/consultas/9999", "host": ["{{baseUrl}}"], "path": ["consultas", "9999"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('404 - nao existe e diferente de nao pode', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Historico GraphQL (8082)",
+      "description": "DEV TASK 07. Roda inteira no Collection Runner.\n\nSuba o carehub-historico antes: cd carehub-historico && ./mvnw spring-boot:run\n\nEm GraphQL o status HTTP e sempre 200 mesmo quando o acesso e negado, entao os asserts olham o corpo: 'data' nulo e 'errors[0].extensions.classification'.\n\nA interface interativa fica em http://localhost:8082/graphiql (pede as mesmas credenciais).",
+      "item": [
+        {
+          "name": "MEDICO consulta o historico de qualquer paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente2Id}}\\\") { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{medicoUsername}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "pm.test('sem erros no corpo', () => pm.expect(pm.response.json().errors, JSON.stringify(pm.response.json().errors)).to.be.undefined);",
+                  "const consultas = pm.response.json().data.historicoPorPaciente;",
+                  "pm.test('traz os atendimentos da carga inicial', () => pm.expect(consultas.map(c => c.id)).to.include.members(['3', '4']));",
+                  "pm.test('todos sao do paciente pedido', () => pm.expect(consultas.every(c => c.paciente.id === '2')).to.be.true);",
+                  "const datas = consultas.map(c => new Date(c.dataHora).getTime());",
+                  "pm.test('ordenado do mais recente para o mais antigo', () => pm.expect(datas).to.eql(datas.slice().sort((a, b) => b - a)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ENFERMEIRO consulta o historico de qualquer paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\") { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{enfermeiroUsername}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "pm.test('sem erros no corpo', () => pm.expect(pm.response.json().errors, JSON.stringify(pm.response.json().errors)).to.be.undefined);",
+                  "const consultas = pm.response.json().data.historicoPorPaciente;",
+                  "pm.test('traz os atendimentos da carga inicial', () => pm.expect(consultas.map(c => c.id)).to.include.members(['1', '2']));",
+                  "pm.test('todos sao do paciente pedido', () => pm.expect(consultas.every(c => c.paciente.id === '1')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE consulta o proprio historico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\") { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{paciente1Username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "pm.test('sem erros no corpo', () => pm.expect(pm.response.json().errors, JSON.stringify(pm.response.json().errors)).to.be.undefined);",
+                  "const consultas = pm.response.json().data.historicoPorPaciente;",
+                  "pm.test('traz os proprios atendimentos', () => pm.expect(consultas.map(c => c.id)).to.include.members(['1', '2']));",
+                  "pm.test('nenhum atendimento de outro paciente', () => pm.expect(consultas.every(c => c.paciente.id === '1')).to.be.true);",
+                  "pm.test('o profissional vem junto', () => pm.expect(consultas[0].profissional.nome).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE tentando o historico de outro paciente e bloqueado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente2Id}}\\\") { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{paciente1Username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "const corpo = pm.response.json();",
+                  "pm.test('nao devolve dado - o campo nao anulavel anula data inteiro', () => pm.expect(corpo.data).to.be.null);",
+                  "pm.test('erro classificado como FORBIDDEN', () => pm.expect(corpo.errors[0].extensions.classification).to.eql('FORBIDDEN'));",
+                  "pm.test('mesma mensagem do REST do agendamento', () => pm.expect(corpo.errors[0].message).to.eql('Seu perfil nao permite executar esta operacao.'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MEDICO consulta somente os atendimentos futuros",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { consultasFuturasPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\") { id dataHora status } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{medicoUsername}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "pm.test('sem erros no corpo', () => pm.expect(pm.response.json().errors, JSON.stringify(pm.response.json().errors)).to.be.undefined);",
+                  "const consultas = pm.response.json().data.consultasFuturasPorPaciente;",
+                  "pm.test('todas com data posterior a agora', () => pm.expect(consultas.every(c => new Date(c.dataHora).getTime() > Date.now())).to.be.true);",
+                  "pm.test('nao traz o atendimento ja realizado', () => pm.expect(consultas.map(c => c.id)).to.not.include('1'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE consulta os proprios atendimentos futuros",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { consultasFuturasPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\") { id dataHora status } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{paciente1Username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "pm.test('sem erros no corpo', () => pm.expect(pm.response.json().errors, JSON.stringify(pm.response.json().errors)).to.be.undefined);",
+                  "const consultas = pm.response.json().data.consultasFuturasPorPaciente;",
+                  "pm.test('todas com data posterior a agora', () => pm.expect(consultas.every(c => new Date(c.dataHora).getTime() > Date.now())).to.be.true);",
+                  "pm.test('traz o proprio atendimento futuro da carga', () => pm.expect(consultas.map(c => c.id)).to.include('2'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PACIENTE tentando os futuros de outro paciente e bloqueado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { consultasFuturasPorPaciente(pacienteId: \\\"{{paciente2Id}}\\\") { id dataHora status } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{paciente1Username}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "const corpo = pm.response.json();",
+                  "pm.test('nao devolve dado - o campo nao anulavel anula data inteiro', () => pm.expect(corpo.data).to.be.null);",
+                  "pm.test('erro classificado como FORBIDDEN', () => pm.expect(corpo.errors[0].extensions.classification).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro por status restringe o historico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\", status: REALIZADA) { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{medicoUsername}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "pm.test('sem erros no corpo', () => pm.expect(pm.response.json().errors, JSON.stringify(pm.response.json().errors)).to.be.undefined);",
+                  "const consultas = pm.response.json().data.historicoPorPaciente;",
+                  "pm.test('traz o atendimento realizado da carga', () => pm.expect(consultas.map(c => c.id)).to.include('1'));",
+                  "pm.test('o status filtrado e o pedido', () => pm.expect(consultas.every(c => c.status === 'REALIZADA')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status invalido e rejeitado pelo contrato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\", status: INEXISTENTE) { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{medicoUsername}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "const corpo = pm.response.json();",
+                  "pm.test('erro de validacao do schema', () => pm.expect(corpo.errors[0].extensions.classification).to.eql('ValidationError'));",
+                  "pm.test('nao chegou a acessar dados', () => pm.expect(corpo.data).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campo inexistente e rejeitado pelo contrato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\") { cpf } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{medicoUsername}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 - em GraphQL o status e sempre 200', () => pm.response.to.have.status(200));",
+                  "const corpo = pm.response.json();",
+                  "pm.test('erro de validacao do schema', () => pm.expect(corpo.errors[0].extensions.classification).to.eql('ValidationError'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sem credencial nao alcanca o endpoint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"query { historicoPorPaciente(pacienteId: \\\"{{paciente1Id}}\\\") { id dataHora status paciente { id nome } profissional { id nome } } }\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrlHistorico}}/graphql",
+              "host": [
+                "{{baseUrlHistorico}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('desafio Basic', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.include('Basic'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
