@@ -2,9 +2,9 @@
 ## Relatório Técnico de Entrega
 
 **Versão:** 1.0  
-**Data:** 05 de Setembro de 2026  
+**Data:** 10 de Setembro de 2026  
 **Projeto:** FIAP Tech Challenge - Fase 3  
-**Stack:** Java 21 | Spring Boot 4.1 | PostgreSQL | RabbitMQ | GraphQL | Docker  
+**Stack:** Java 21 | Spring Boot 4.1 | PostgreSQL | RabbitMQ | GraphQL | MapStruct | Docker  
 **Link do repositório:** https://github.com/docarmoj/fiap-tech-challenge-fase3
 
 ---
@@ -51,9 +51,10 @@ O CareHub é um backend modular voltado ao contexto hospitalar, com foco em agen
 Os serviços seguem arquitetura em camadas:
 
 - **Controller / GraphQL Controller:** recebe requisições HTTP ou GraphQL
-- **Service:** concentra regras de negócio
+- **Service:** orquestra casos de uso e integração entre domínio, persistência e mensageria
 - **Repository:** acesso a dados via Spring Data JPA
-- **Model / Entity:** mapeamento das tabelas de banco
+- **Model / Entity:** mapeamento das tabelas e encapsulamento das invariantes do domínio
+- **Mapper:** transformação entre entidades e DTOs com MapStruct
 - **Config / Security / Messaging:** configuração de segurança, filas e beans Spring
 
 ### 1.3 Stack Tecnológico
@@ -67,6 +68,7 @@ Os serviços seguem arquitetura em camadas:
 | Spring Data JPA | 4.1.0 | persistência ORM |
 | Spring for GraphQL | 4.1.0 | consultas GraphQL no histórico |
 | Spring AMQP | 4.1.0 | integração com RabbitMQ |
+| MapStruct | 1.6.3 | mapeamento entre entidades e DTOs |
 | Flyway | 11.x | migrations de banco |
 | PostgreSQL | 16 | banco relacional no runtime local |
 | H2 | 2.4.x | banco em memória nos testes |
@@ -77,15 +79,15 @@ Os serviços seguem arquitetura em camadas:
 
 **Fluxo REST de agendamento**
 
-Cliente HTTP → `ConsultaController` → `ConsultaService` → `ConsultaRepository` → PostgreSQL
+Cliente HTTP → `ConsultaController` → `ConsultaService` → `Consulta` / `ConsultaRepository` → PostgreSQL
 
 **Fluxo assíncrono**
 
-`carehub-agendamento` → `ConsultaEventPublisher` → RabbitMQ → `carehub-notificacao` / `carehub-historico`
+`carehub-agendamento` → `ConsultaEventFactory` → `ConsultaEventPublisher` → RabbitMQ → `carehub-notificacao` / `carehub-historico`
 
 **Fluxo GraphQL**
 
-Cliente GraphQL → `HistoricoGraphQlController` → `ConsultaHistoricoService` → `ConsultaHistoricoRepository` → PostgreSQL do histórico
+Cliente GraphQL → `HistoricoGraphQlController` → `ConsultaHistoricoMapper` → `ConsultaHistoricoService` → `ConsultaHistoricoRepository` → PostgreSQL do histórico
 
 ---
 
@@ -154,6 +156,11 @@ Representa a consulta agendada.
 | `data_hora` | LocalDateTime | data e hora da consulta |
 | `status` | Enum | `AGENDADA`, `REALIZADA`, `CANCELADA` |
 | `observacoes` | String | informações complementares |
+
+Além do mapeamento estrutural, a entidade `Consulta` passou a encapsular o comportamento principal do agregado:
+
+- criação de um novo agendamento com status inicial `AGENDADA`
+- atualização controlada dos dados da consulta
 
 ### 2.3 Modelo do Serviço de Histórico
 
@@ -377,6 +384,14 @@ As migrations também reforçam integridade:
 
 ## 5. Comunicação Assíncrona
 
+O fluxo assíncrono foi organizado com separação explícita entre produtor e consumidores:
+
+- `carehub-agendamento` usa apenas `carehub.rabbitmq.producer.exchange` e `carehub.rabbitmq.producer.routing-key`
+- `carehub-historico` e `carehub-notificacao` usam propriedades próprias em `carehub.rabbitmq.consumer.*`
+- filas, DLQ e bindings ficaram restritos aos consumidores, evitando acoplamento indevido no serviço produtor
+
+O evento publicado continua representando criação e atualização de consultas, mas sua montagem passou a ser responsabilidade do componente dedicado `ConsultaEventFactory`.
+
 ### 5.1 Publicação de Eventos
 
 Sempre que uma consulta é criada ou alterada, o serviço `carehub-agendamento` publica um evento no RabbitMQ.
@@ -503,6 +518,8 @@ mvnw.cmd spring-boot:run
 
 ## 9. Testes Automatizados
 
+Os módulos possuem testes unitários e de integração cobrindo segurança, mensageria e consultas. Os testes de integração foram organizados com perfil próprio e dependem de RabbitMQ disponível no ambiente local.
+
 O projeto possui testes cobrindo:
 
 - autenticação HTTP Basic
@@ -511,9 +528,19 @@ O projeto possui testes cobrindo:
 - publicação e consumo de eventos
 - queries GraphQL do histórico
 
-**Situação da entrega**
+### 9.1 Cobertura automatizada (JaCoCo)
 
-- `carehub-agendamento`: testes passando
-- `carehub-historico`: testes passando
-- `carehub-notificacao`: testes passando
+A cobertura foi validada com JaCoCo após a execução dos testes em cada módulo do monorepo.
 
+Para repetir a execução localmente sem divergências de ambiente:
+
+- use Java 21 no terminal e no Maven Wrapper
+- mantenha o RabbitMQ disponível para os testes de integração
+- evite executar a suíte com Java 25 enquanto o agente JaCoCo do ambiente não estiver alinhado com esse runtime
+
+| Serviço | Instruções | Linhas | Branches | Status |
+| --- | ---: | ---: | ---: | --- |
+| `carehub-agendamento` | 94,81% | 97,61% | 88,89% | testes passando |
+| `carehub-historico` | 82,16% | 82,83% | 61,54% | testes passando |
+| `carehub-notificacao` | 80,38% | 80,39% | 100,00% | testes passando |
+| `Consolidado` | 87,96% | 89,56% | 73,91% | monorepo |
