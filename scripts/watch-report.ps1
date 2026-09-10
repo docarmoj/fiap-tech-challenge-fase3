@@ -12,7 +12,7 @@ if (-not (Test-Path $inputPath)) {
     throw "Arquivo Markdown não encontrado: $inputPath"
 }
 
-Write-Host "Monitorando alterações em: $inputPath"
+Write-Host "Monitorando alteracoes no relatorio tecnico: $inputPath"
 Write-Host "Pressione Ctrl+C para encerrar."
 
 $directory = Split-Path -Parent $inputPath

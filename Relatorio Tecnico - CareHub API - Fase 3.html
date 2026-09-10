@@ -185,17 +185,22 @@ do Histórico</a></li>
 id="toc-guia-de-execução-com-docker-compose">8. Guia de Execução com
 Docker Compose</a></li>
 <li><a href="#testes-automatizados" id="toc-testes-automatizados">9.
-Testes Automatizados</a></li>
+Testes Automatizados</a>
+<ul>
+<li><a href="#cobertura-automatizada-jacoco"
+id="toc-cobertura-automatizada-jacoco">9.1 Cobertura automatizada
+(JaCoCo)</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </nav>
 <h1 id="carehub-api">CareHub API</h1>
 <h2 id="relatório-técnico-de-entrega">Relatório Técnico de Entrega</h2>
 <p><strong>Versão:</strong> 1.0<br />
-<strong>Data:</strong> 05 de Setembro de 2026<br />
+<strong>Data:</strong> 10 de Setembro de 2026<br />
 <strong>Projeto:</strong> FIAP Tech Challenge - Fase 3<br />
 <strong>Stack:</strong> Java 21 | Spring Boot 4.1 | PostgreSQL |
-RabbitMQ | GraphQL | Docker<br />
+RabbitMQ | GraphQL | MapStruct | Docker<br />
 <strong>Link do repositório:</strong>
 https://github.com/docarmoj/fiap-tech-challenge-fase3</p>
 <hr />
@@ -287,10 +292,13 @@ consulta</td>
 <ul>
 <li><strong>Controller / GraphQL Controller:</strong> recebe requisições
 HTTP ou GraphQL</li>
-<li><strong>Service:</strong> concentra regras de negócio</li>
+<li><strong>Service:</strong> orquestra casos de uso e integração entre
+domínio, persistência e mensageria</li>
 <li><strong>Repository:</strong> acesso a dados via Spring Data JPA</li>
-<li><strong>Model / Entity:</strong> mapeamento das tabelas de
-banco</li>
+<li><strong>Model / Entity:</strong> mapeamento das tabelas e
+encapsulamento das invariantes do domínio</li>
+<li><strong>Mapper:</strong> transformação entre entidades e DTOs com
+MapStruct</li>
 <li><strong>Config / Security / Messaging:</strong> configuração de
 segurança, filas e beans Spring</li>
 </ul>
@@ -340,6 +348,11 @@ segurança, filas e beans Spring</li>
 <td>integração com RabbitMQ</td>
 </tr>
 <tr>
+<td>MapStruct</td>
+<td>1.6.3</td>
+<td>mapeamento entre entidades e DTOs</td>
+</tr>
+<tr>
 <td>Flyway</td>
 <td>11.x</td>
 <td>migrations de banco</td>
@@ -369,14 +382,15 @@ segurança, filas e beans Spring</li>
 <h3 id="fluxos-principais">1.4 Fluxos Principais</h3>
 <p><strong>Fluxo REST de agendamento</strong></p>
 <p>Cliente HTTP → <code>ConsultaController</code> →
-<code>ConsultaService</code> → <code>ConsultaRepository</code> →
-PostgreSQL</p>
+<code>ConsultaService</code> → <code>Consulta</code> /
+<code>ConsultaRepository</code> → PostgreSQL</p>
 <p><strong>Fluxo assíncrono</strong></p>
-<p><code>carehub-agendamento</code> →
-<code>ConsultaEventPublisher</code> → RabbitMQ →
+<p><code>carehub-agendamento</code> → <code>ConsultaEventFactory</code>
+→ <code>ConsultaEventPublisher</code> → RabbitMQ →
 <code>carehub-notificacao</code> / <code>carehub-historico</code></p>
 <p><strong>Fluxo GraphQL</strong></p>
 <p>Cliente GraphQL → <code>HistoricoGraphQlController</code> →
+<code>ConsultaHistoricoMapper</code> →
 <code>ConsultaHistoricoService</code> →
 <code>ConsultaHistoricoRepository</code> → PostgreSQL do histórico</p>
 <hr />
@@ -561,6 +575,13 @@ profissional.</p>
 </tr>
 </tbody>
 </table>
+<p>Além do mapeamento estrutural, a entidade <code>Consulta</code>
+passou a encapsular o comportamento principal do agregado:</p>
+<ul>
+<li>criação de um novo agendamento com status inicial
+<code>AGENDADA</code></li>
+<li>atualização controlada dos dados da consulta</li>
+</ul>
 <h3 id="modelo-do-serviço-de-histórico">2.3 Modelo do Serviço de
 Histórico</h3>
 <p>O serviço <code>carehub-historico</code> mantém uma projeção própria
@@ -772,6 +793,21 @@ e vínculo de domínio</li>
 </ul>
 <hr />
 <h2 id="comunicação-assíncrona">5. Comunicação Assíncrona</h2>
+<p>O fluxo assíncrono foi organizado com separação explícita entre
+produtor e consumidores:</p>
+<ul>
+<li><code>carehub-agendamento</code> usa apenas
+<code>carehub.rabbitmq.producer.exchange</code> e
+<code>carehub.rabbitmq.producer.routing-key</code></li>
+<li><code>carehub-historico</code> e <code>carehub-notificacao</code>
+usam propriedades próprias em
+<code>carehub.rabbitmq.consumer.*</code></li>
+<li>filas, DLQ e bindings ficaram restritos aos consumidores, evitando
+acoplamento indevido no serviço produtor</li>
+</ul>
+<p>O evento publicado continua representando criação e atualização de
+consultas, mas sua montagem passou a ser responsabilidade do componente
+dedicado <code>ConsultaEventFactory</code>.</p>
 <h3 id="publicação-de-eventos">5.1 Publicação de Eventos</h3>
 <p>Sempre que uma consulta é criada ou alterada, o serviço
 <code>carehub-agendamento</code> publica um evento no RabbitMQ.</p>
@@ -890,6 +926,10 @@ class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb14
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>mvnw<span class="op">.</span><span class="fu">cmd</span> spring-boot<span class="op">:</span>run</span></code></pre></div>
 <hr />
 <h2 id="testes-automatizados">9. Testes Automatizados</h2>
+<p>Os módulos possuem testes unitários e de integração cobrindo
+segurança, mensageria e consultas. Os testes de integração foram
+organizados com perfil próprio e dependem de RabbitMQ disponível no
+ambiente local.</p>
 <p>O projeto possui testes cobrindo:</p>
 <ul>
 <li>autenticação HTTP Basic</li>
@@ -898,11 +938,57 @@ class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb14
 <li>publicação e consumo de eventos</li>
 <li>queries GraphQL do histórico</li>
 </ul>
-<p><strong>Situação da entrega</strong></p>
+<h3 id="cobertura-automatizada-jacoco">9.1 Cobertura automatizada
+(JaCoCo)</h3>
+<p>A cobertura foi validada com JaCoCo após a execução dos testes em
+cada módulo do monorepo.</p>
+<p>Para repetir a execução localmente sem divergências de ambiente:</p>
 <ul>
-<li><code>carehub-agendamento</code>: testes passando</li>
-<li><code>carehub-historico</code>: testes passando</li>
-<li><code>carehub-notificacao</code>: testes passando</li>
+<li>use Java 21 no terminal e no Maven Wrapper</li>
+<li>mantenha o RabbitMQ disponível para os testes de integração</li>
+<li>evite executar a suíte com Java 25 enquanto o agente JaCoCo do
+ambiente não estiver alinhado com esse runtime</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>Serviço</th>
+<th style="text-align: right;">Instruções</th>
+<th style="text-align: right;">Linhas</th>
+<th style="text-align: right;">Branches</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>carehub-agendamento</code></td>
+<td style="text-align: right;">94,81%</td>
+<td style="text-align: right;">97,61%</td>
+<td style="text-align: right;">88,89%</td>
+<td>testes passando</td>
+</tr>
+<tr>
+<td><code>carehub-historico</code></td>
+<td style="text-align: right;">82,16%</td>
+<td style="text-align: right;">82,83%</td>
+<td style="text-align: right;">61,54%</td>
+<td>testes passando</td>
+</tr>
+<tr>
+<td><code>carehub-notificacao</code></td>
+<td style="text-align: right;">80,38%</td>
+<td style="text-align: right;">80,39%</td>
+<td style="text-align: right;">100,00%</td>
+<td>testes passando</td>
+</tr>
+<tr>
+<td><code>Consolidado</code></td>
+<td style="text-align: right;">87,96%</td>
+<td style="text-align: right;">89,56%</td>
+<td style="text-align: right;">73,91%</td>
+<td>monorepo</td>
+</tr>
+</tbody>
+</table>
 </body>
 </html>

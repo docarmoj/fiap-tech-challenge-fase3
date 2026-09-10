@@ -15,7 +15,7 @@ public class ConsultaHistoricoListener {
         this.consultaHistoricoService = consultaHistoricoService;
     }
 
-    @RabbitListener(queues = "${carehub.rabbitmq.queue}")
+    @RabbitListener(queues = "${carehub.rabbitmq.consumer.queue}")
     public void receberEvento(ConsultaEvent event) {
         consultaHistoricoService.registrar(event);
     }

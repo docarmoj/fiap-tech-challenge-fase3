@@ -7,15 +7,38 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$sessionTools = "C:\Users\docar\.copilot\session-state\63972b67-5062-4f3c-b4bc-198d90828b3c\files"
-$pandocExe = Join-Path $sessionTools "pandoc\pandoc-3.6.4\pandoc.exe"
-$weasyprintExe = Join-Path $sessionTools "weasyprint\dist\weasyprint.exe"
 $cssFile = Join-Path $repoRoot "scripts\report-style.css"
 
 $inputPath = Join-Path $repoRoot $InputFile
 $htmlPath = Join-Path $repoRoot $HtmlFile
 $pdfPath = Join-Path $repoRoot $PdfFile
 $cssUri = "file:///" + ($cssFile -replace "\\", "/")
+
+function Find-Executable {
+    param(
+        [string]$CommandName,
+        [string]$FileName
+    )
+
+    $command = Get-Command $CommandName -ErrorAction SilentlyContinue
+    if ($command -and $command.Source) {
+        return $command.Source
+    }
+
+    $sessionStateRoot = Join-Path $env:USERPROFILE ".copilot\session-state"
+    if (Test-Path $sessionStateRoot) {
+        $match = Get-ChildItem $sessionStateRoot -Recurse -Filter $FileName -ErrorAction SilentlyContinue |
+                Select-Object -First 1 -ExpandProperty FullName
+        if ($match) {
+            return $match
+        }
+    }
+
+    return $null
+}
+
+$pandocExe = Find-Executable -CommandName "pandoc" -FileName "pandoc.exe"
+$weasyprintExe = Find-Executable -CommandName "weasyprint" -FileName "weasyprint.exe"
 
 if (-not (Test-Path $inputPath)) {
     throw "Arquivo Markdown não encontrado: $inputPath"
@@ -47,5 +70,5 @@ if ($LASTEXITCODE -ne 0) {
     throw "Falha ao gerar PDF."
 }
 
-Write-Host "HTML gerado em: $htmlPath"
-Write-Host "PDF gerado em:  $pdfPath"
+Write-Host "Relatorio tecnico HTML gerado em: $htmlPath"
+Write-Host "Relatorio tecnico PDF gerado em:  $pdfPath"

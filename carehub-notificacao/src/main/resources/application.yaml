@@ -22,9 +22,10 @@ server:
 
 carehub:
   rabbitmq:
-    exchange: carehub.consultas.exchange
-    routing-key: consulta.evento
-    queue: carehub.notificacoes.queue
-    dlx: carehub.consultas.dlx
-    dlq: carehub.notificacoes.dlq
-    dlq-routing-key: consulta.notificacao.dlq
+    consumer:
+      exchange: carehub.consultas.exchange
+      routing-key: consulta.evento
+      queue: carehub.notificacoes.queue
+      dlx: carehub.consultas.dlx
+      dlq: carehub.notificacoes.dlq
+      dlq-routing-key: consulta.notificacao.dlq

@@ -1,8 +1,8 @@
 package br.com.fiap.carehub.agendamento.service;
 
-import br.com.fiap.carehub.agendamento.dto.ConsultaEvent;
 import br.com.fiap.carehub.agendamento.dto.ConsultaRequest;
 import br.com.fiap.carehub.agendamento.dto.ConsultaUpdateRequest;
+import br.com.fiap.carehub.agendamento.messaging.ConsultaEventFactory;
 import br.com.fiap.carehub.agendamento.messaging.ConsultaEventPublisher;
 import br.com.fiap.carehub.agendamento.model.Consulta;
 import br.com.fiap.carehub.agendamento.model.Paciente;
@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -23,17 +22,20 @@ public class ConsultaService {
     private final ConsultaRepository consultaRepository;
     private final PacienteRepository pacienteRepository;
     private final ProfissionalRepository profissionalRepository;
+    private final ConsultaEventFactory consultaEventFactory;
     private final ConsultaEventPublisher consultaEventPublisher;
 
     public ConsultaService(
             ConsultaRepository consultaRepository,
             PacienteRepository pacienteRepository,
             ProfissionalRepository profissionalRepository,
+            ConsultaEventFactory consultaEventFactory,
             ConsultaEventPublisher consultaEventPublisher
     ) {
         this.consultaRepository = consultaRepository;
         this.pacienteRepository = pacienteRepository;
         this.profissionalRepository = profissionalRepository;
+        this.consultaEventFactory = consultaEventFactory;
         this.consultaEventPublisher = consultaEventPublisher;
     }
 
@@ -67,16 +69,15 @@ public class ConsultaService {
                         "Profissional não encontrado"
                 ));
 
-        Consulta consulta = Consulta.builder()
-                .paciente(paciente)
-                .profissional(profissional)
-                .dataHora(request.getDataHora())
-                .observacoes(request.getObservacoes())
-                .build();
+        Consulta consulta = Consulta.agendar(
+                paciente,
+                profissional,
+                request.getDataHora(),
+                request.getObservacoes());
 
         Consulta consultaCriada = consultaRepository.save(consulta);
 
-        publicarEvento(consultaCriada, "CONSULTA_CRIADA");
+        consultaEventPublisher.publicar(consultaEventFactory.criarEventoConsultaCriada(consultaCriada));
 
         return consultaCriada;
     }
@@ -97,40 +98,19 @@ public class ConsultaService {
                         "Profissional não encontrado"
                 ));
 
-        consulta.setPaciente(paciente);
-        consulta.setProfissional(profissional);
-        consulta.setDataHora(request.getDataHora());
-        consulta.setStatus(request.getStatus());
-        consulta.setObservacoes(request.getObservacoes());
+        consulta.atualizarAgendamento(
+                paciente,
+                profissional,
+                request.getDataHora(),
+                request.getStatus(),
+                request.getObservacoes());
 
         Consulta consultaAtualizada = consultaRepository.save(consulta);
 
         Consulta consultaCarregada = buscarPorId(consultaAtualizada.getId());
 
-        publicarEvento(consultaCarregada, "CONSULTA_ALTERADA");
+        consultaEventPublisher.publicar(consultaEventFactory.criarEventoConsultaAlterada(consultaCarregada));
 
         return consultaCarregada;
-    }
-
-    private void publicarEvento(Consulta consulta, String acao) {
-
-        Paciente paciente = consulta.getPaciente();
-        Profissional profissional = consulta.getProfissional();
-
-        ConsultaEvent event = new ConsultaEvent(
-                consulta.getId(),
-                paciente.getId(),
-                paciente.getNome(),
-                paciente.getEmail(),
-                profissional.getId(),
-                profissional.getNome(),
-                consulta.getDataHora(),
-                consulta.getStatus().name(),
-                consulta.getObservacoes(),
-                acao,
-                LocalDateTime.now()
-        );
-
-        consultaEventPublisher.publicar(event);
     }
 }
