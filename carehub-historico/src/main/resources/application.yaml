@@ -45,9 +45,10 @@ spring:
 
 carehub:
   rabbitmq:
-    exchange: carehub.consultas.exchange
-    routing-key: consulta.evento
-    queue: carehub.historico.queue
-    dlx: carehub.consultas.dlx
-    dlq: carehub.historico.dlq
-    dlq-routing-key: consulta.historico.dlq
+    consumer:
+      exchange: carehub.consultas.exchange
+      routing-key: consulta.evento
+      queue: carehub.historico.queue
+      dlx: carehub.consultas.dlx
+      dlq: carehub.historico.dlq
+      dlq-routing-key: consulta.historico.dlq

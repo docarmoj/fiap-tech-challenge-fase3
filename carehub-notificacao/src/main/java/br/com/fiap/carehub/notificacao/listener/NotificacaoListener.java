@@ -21,7 +21,7 @@ public class NotificacaoListener {
 		this.notificacaoSender = notificacaoSender;
 	}
 
-	@RabbitListener(queues = "${carehub.rabbitmq.queue}")
+	@RabbitListener(queues = "${carehub.rabbitmq.consumer.queue}")
 	public void receberLembrete(ConsultaEvent event) {
 
 		LembreteNotificacao lembrete =

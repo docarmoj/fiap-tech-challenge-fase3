@@ -1,4 +1,4 @@
-package br.com.fiap.carehub.historico;
+package br.com.fiap.carehub.historico.integracao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -19,29 +19,20 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.rabbitmq.RabbitMQContainer;
-import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
-@Testcontainers
 class HistoricoRabbitMqGraphQlIT {
 
     private static final long CONSULTA_ID = 902L;
-
-    @Container
-    @ServiceConnection
-    static final RabbitMQContainer RABBITMQ = new RabbitMQContainer(
-            DockerImageName.parse("rabbitmq:3.13-management-alpine"));
+    private static final String EXCHANGE_CONSULTAS = "carehub.consultas.exchange";
+    private static final String ROUTING_KEY_CONSULTA_EVENTO = "consulta.evento";
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -111,11 +102,7 @@ class HistoricoRabbitMqGraphQlIT {
                 eventoPublicadoPeloAgendamento.getBytes(StandardCharsets.UTF_8),
                 propriedades);
 
-        rabbitTemplate.send(
-                "carehub.consultas.exchange",
-                "consulta.evento",
-                mensagem
-        );
+        rabbitTemplate.send(EXCHANGE_CONSULTAS, ROUTING_KEY_CONSULTA_EVENTO, mensagem);
     }
 
     private ConsultaHistorico aguardarStatus(StatusConsulta statusEsperado) throws InterruptedException {

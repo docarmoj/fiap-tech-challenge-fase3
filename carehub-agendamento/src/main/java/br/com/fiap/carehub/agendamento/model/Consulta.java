@@ -41,4 +41,24 @@ public class Consulta {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Profissional profissional;
+
+    public static Consulta agendar(Paciente paciente, Profissional profissional,
+            LocalDateTime dataHora, String observacoes) {
+        return Consulta.builder()
+                .paciente(paciente)
+                .profissional(profissional)
+                .dataHora(dataHora)
+                .observacoes(observacoes)
+                .status(StatusConsulta.AGENDADA)
+                .build();
+    }
+
+    public void atualizarAgendamento(Paciente paciente, Profissional profissional,
+            LocalDateTime dataHora, StatusConsulta status, String observacoes) {
+        this.paciente = paciente;
+        this.profissional = profissional;
+        this.dataHora = dataHora;
+        this.status = status;
+        this.observacoes = observacoes;
+    }
 }

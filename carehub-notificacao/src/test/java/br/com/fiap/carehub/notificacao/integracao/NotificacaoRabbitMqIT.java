@@ -1,4 +1,4 @@
-package br.com.fiap.carehub.notificacao;
+package br.com.fiap.carehub.notificacao.integracao;
 
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.timeout;
@@ -13,23 +13,15 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.rabbitmq.RabbitMQContainer;
-import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @ActiveProfiles("integration")
-@Testcontainers
 class NotificacaoRabbitMqIT {
 
-    @Container
-    @ServiceConnection
-    static final RabbitMQContainer RABBITMQ = new RabbitMQContainer(
-            DockerImageName.parse("rabbitmq:3.13-management-alpine"));
+    private static final String EXCHANGE_CONSULTAS = "carehub.consultas.exchange";
+    private static final String ROUTING_KEY_CONSULTA_EVENTO = "consulta.evento";
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -63,11 +55,7 @@ class NotificacaoRabbitMqIT {
                 eventoPublicadoPeloAgendamento.getBytes(StandardCharsets.UTF_8),
                 propriedades);
 
-        rabbitTemplate.send(
-                "carehub.consultas.exchange",
-                "consulta.evento",
-                mensagem
-        );
+        rabbitTemplate.send(EXCHANGE_CONSULTAS, ROUTING_KEY_CONSULTA_EVENTO, mensagem);
 
         verify(notificacaoSender, timeout(10_000)).enviar(argThat(lembrete ->
                 lembrete != null

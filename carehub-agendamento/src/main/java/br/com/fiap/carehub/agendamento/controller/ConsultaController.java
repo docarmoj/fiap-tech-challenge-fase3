@@ -3,6 +3,7 @@ package br.com.fiap.carehub.agendamento.controller;
 import br.com.fiap.carehub.agendamento.dto.ConsultaRequest;
 import br.com.fiap.carehub.agendamento.dto.ConsultaResponse;
 import br.com.fiap.carehub.agendamento.dto.ConsultaUpdateRequest;
+import br.com.fiap.carehub.agendamento.mapper.ConsultaMapper;
 import br.com.fiap.carehub.agendamento.model.Consulta;
 import br.com.fiap.carehub.agendamento.security.AutorizacaoService;
 import br.com.fiap.carehub.agendamento.security.UsuarioAutenticado;
@@ -27,21 +28,22 @@ public class ConsultaController {
 
     private final ConsultaService consultaService;
     private final AutorizacaoService autorizacaoService;
+    private final ConsultaMapper consultaMapper;
 
-    public ConsultaController(ConsultaService consultaService, AutorizacaoService autorizacaoService) {
+    public ConsultaController(ConsultaService consultaService, AutorizacaoService autorizacaoService,
+            ConsultaMapper consultaMapper) {
         this.consultaService = consultaService;
         this.autorizacaoService = autorizacaoService;
+        this.consultaMapper = consultaMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO', 'PACIENTE')")
     public List<ConsultaResponse> listar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
 
-        List<Consulta> consultas = autorizacaoService.filtroDeListagem(usuario)
+        return consultaMapper.toResponseList(autorizacaoService.filtroDeListagem(usuario)
                 .map(consultaService::listarPorPaciente)
-                .orElseGet(consultaService::listarTodas);
-
-        return consultas.stream().map(this::toResponse).toList();
+                .orElseGet(consultaService::listarTodas));
     }
 
     @GetMapping("/{id}")
@@ -54,7 +56,7 @@ public class ConsultaController {
 
         autorizacaoService.validarAcessoConsulta(consulta, usuario);
 
-        return toResponse(consulta);
+        return consultaMapper.toResponse(consulta);
     }
 
     @PostMapping
@@ -62,7 +64,7 @@ public class ConsultaController {
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
     public ConsultaResponse criarConsulta(@Valid @RequestBody ConsultaRequest request) {
 
-        return toResponse(consultaService.criarConsulta(request));
+        return consultaMapper.toResponse(consultaService.criarConsulta(request));
     }
 
     @PutMapping("/{id}")
@@ -71,19 +73,6 @@ public class ConsultaController {
             @PathVariable Long id,
             @Valid @RequestBody ConsultaUpdateRequest request) {
 
-        return toResponse(consultaService.atualizarConsulta(id, request));
-    }
-
-    private ConsultaResponse toResponse(Consulta consulta) {
-        return ConsultaResponse.builder()
-                .id(consulta.getId())
-                .pacienteId(consulta.getPaciente().getId())
-                .pacienteNome(consulta.getPaciente().getNome())
-                .profissionalId(consulta.getProfissional().getId())
-                .profissionalNome(consulta.getProfissional().getNome())
-                .dataHora(consulta.getDataHora())
-                .status(consulta.getStatus())
-                .observacoes(consulta.getObservacoes())
-                .build();
+        return consultaMapper.toResponse(consultaService.atualizarConsulta(id, request));
     }
 }

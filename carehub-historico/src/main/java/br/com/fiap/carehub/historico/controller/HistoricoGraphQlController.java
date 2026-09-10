@@ -1,10 +1,8 @@
 package br.com.fiap.carehub.historico.controller;
 
 import br.com.fiap.carehub.historico.dto.ConsultaResponse;
-import br.com.fiap.carehub.historico.dto.PacienteResponse;
-import br.com.fiap.carehub.historico.dto.ProfissionalResponse;
 import br.com.fiap.carehub.historico.enums.StatusConsulta;
-import br.com.fiap.carehub.historico.model.ConsultaHistorico;
+import br.com.fiap.carehub.historico.mapper.ConsultaHistoricoMapper;
 import br.com.fiap.carehub.historico.security.AutorizacaoService;
 import br.com.fiap.carehub.historico.security.UsuarioAutenticado;
 import br.com.fiap.carehub.historico.service.ConsultaHistoricoService;
@@ -20,11 +18,14 @@ public class HistoricoGraphQlController {
 
     private final ConsultaHistoricoService consultaHistoricoService;
     private final AutorizacaoService autorizacaoService;
+    private final ConsultaHistoricoMapper consultaHistoricoMapper;
 
     public HistoricoGraphQlController(ConsultaHistoricoService consultaHistoricoService,
-            AutorizacaoService autorizacaoService) {
+            AutorizacaoService autorizacaoService,
+            ConsultaHistoricoMapper consultaHistoricoMapper) {
         this.consultaHistoricoService = consultaHistoricoService;
         this.autorizacaoService = autorizacaoService;
+        this.consultaHistoricoMapper = consultaHistoricoMapper;
     }
 
     @QueryMapping
@@ -36,7 +37,8 @@ public class HistoricoGraphQlController {
 
         autorizacaoService.validarAcessoHistorico(pacienteId, usuario);
 
-        return toResponse(consultaHistoricoService.buscarHistorico(pacienteId, status));
+        return consultaHistoricoMapper.toResponseList(
+                consultaHistoricoService.buscarHistorico(pacienteId, status));
     }
 
     @QueryMapping
@@ -48,20 +50,7 @@ public class HistoricoGraphQlController {
 
         autorizacaoService.validarAcessoHistorico(pacienteId, usuario);
 
-        return toResponse(consultaHistoricoService.buscarFuturas(pacienteId, status));
-    }
-
-    private List<ConsultaResponse> toResponse(List<ConsultaHistorico> consultas) {
-        return consultas.stream().map(this::toResponse).toList();
-    }
-
-    private ConsultaResponse toResponse(ConsultaHistorico consulta) {
-        return new ConsultaResponse(
-                consulta.getConsultaId(),
-                consulta.getDataHora(),
-                consulta.getStatus(),
-                consulta.getObservacoes(),
-                new PacienteResponse(consulta.getPacienteId(), consulta.getPacienteNome()),
-                new ProfissionalResponse(consulta.getProfissionalId(), consulta.getProfissionalNome()));
+        return consultaHistoricoMapper.toResponseList(
+                consultaHistoricoService.buscarFuturas(pacienteId, status));
     }
 }

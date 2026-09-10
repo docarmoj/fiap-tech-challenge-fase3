@@ -1,4 +1,4 @@
-package br.com.fiap.carehub.agendamento;
+package br.com.fiap.carehub.agendamento.integracao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -15,28 +15,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.rabbitmq.RabbitMQContainer;
-import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
-@Testcontainers
 class AgendamentoRabbitMqIT {
 
     private static final String FILA_NOTIFICACOES = "carehub.notificacoes.queue";
-
-    @Container
-    @ServiceConnection
-    static final RabbitMQContainer RABBITMQ = new RabbitMQContainer(
-            DockerImageName.parse("rabbitmq:3.13-management-alpine"));
 
     @Autowired
     private MockMvc mockMvc;

@@ -8,3 +8,13 @@ spring:
           max-interval: 500ms
           multiplier: 2
           max-retries: 3
+
+carehub:
+  rabbitmq:
+    consumer:
+      exchange: carehub.consultas.exchange
+      routing-key: consulta.evento
+      queue: carehub.notificacoes.queue
+      dlx: carehub.consultas.dlx
+      dlq: carehub.notificacoes.dlq
+      dlq-routing-key: consulta.notificacao.dlq

@@ -16,23 +16,23 @@ public class RabbitMQConfig {
 
     @Bean
     public DirectExchange consultasExchange(
-            @Value("${carehub.rabbitmq.exchange}") String exchangeName
+            @Value("${carehub.rabbitmq.consumer.exchange}") String exchangeName
     ) {
         return new DirectExchange(exchangeName, true, false);
     }
 
     @Bean
     public DirectExchange consultasDlx(
-            @Value("${carehub.rabbitmq.dlx}") String dlxName
+            @Value("${carehub.rabbitmq.consumer.dlx}") String dlxName
     ) {
         return new DirectExchange(dlxName, true, false);
     }
 
     @Bean
     public Queue notificacoesQueue(
-            @Value("${carehub.rabbitmq.queue}") String queueName,
-            @Value("${carehub.rabbitmq.dlx}") String dlxName,
-            @Value("${carehub.rabbitmq.dlq-routing-key}") String dlqRoutingKey
+            @Value("${carehub.rabbitmq.consumer.queue}") String queueName,
+            @Value("${carehub.rabbitmq.consumer.dlx}") String dlxName,
+            @Value("${carehub.rabbitmq.consumer.dlq-routing-key}") String dlqRoutingKey
     ) {
         return QueueBuilder.durable(queueName)
                 .deadLetterExchange(dlxName)
@@ -42,7 +42,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue notificacoesDlq(
-            @Value("${carehub.rabbitmq.dlq}") String dlqName
+            @Value("${carehub.rabbitmq.consumer.dlq}") String dlqName
     ) {
         return QueueBuilder.durable(dlqName).build();
     }
@@ -51,7 +51,7 @@ public class RabbitMQConfig {
     public Binding notificacoesBinding(
             Queue notificacoesQueue,
             DirectExchange consultasExchange,
-            @Value("${carehub.rabbitmq.routing-key}") String routingKey
+            @Value("${carehub.rabbitmq.consumer.routing-key}") String routingKey
     ) {
         return BindingBuilder.bind(notificacoesQueue).to(consultasExchange).with(routingKey);
     }
@@ -60,7 +60,7 @@ public class RabbitMQConfig {
     public Binding notificacoesDlqBinding(
             Queue notificacoesDlq,
             DirectExchange consultasDlx,
-            @Value("${carehub.rabbitmq.dlq-routing-key}") String dlqRoutingKey
+            @Value("${carehub.rabbitmq.consumer.dlq-routing-key}") String dlqRoutingKey
     ) {
         return BindingBuilder.bind(notificacoesDlq).to(consultasDlx).with(dlqRoutingKey);
     }

@@ -14,8 +14,8 @@ public class ConsultaEventPublisher {
 
     public ConsultaEventPublisher(
             RabbitTemplate rabbitTemplate,
-            @Value("${carehub.rabbitmq.exchange}") String exchange,
-            @Value("${carehub.rabbitmq.routing-key}") String routingKey
+            @Value("${carehub.rabbitmq.producer.exchange}") String exchange,
+            @Value("${carehub.rabbitmq.producer.routing-key}") String routingKey
     ) {
         this.rabbitTemplate = rabbitTemplate;
         this.exchange = exchange;
